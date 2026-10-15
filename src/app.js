@@ -150,8 +150,8 @@ const ICON={
 };
 
 /* ---------- state ---------- */
-function defaultWeek(){return{servings:4,simple:true,excluded:[],days:DOW.map(()=>({id:null,locked:false,skip:false})),ticks:[],have:[],favs:[],want:{low:false,budget:false,fav:false}}}
-const ui={tab:'week',filter:'all',meat:null,q:'',hist:{}};
+function defaultWeek(){return{servings:4,simple:true,excluded:[],days:DOW.map(()=>({id:null,locked:false,skip:false})),ticks:[],have:[],favs:[],favDays:[],favAlt:{days:[],on:null},want:{low:false,budget:false,fav:false}}}
+const ui={tab:'week',filter:'all',meat:null,q:'',hist:{},favDays:null,favAlt:null,altHere:true};
 let state=defaultWeek(), lib={meals:[],ing:{}};
 let ING={}, MEALS=[], byId={};
 let fresh=true;
@@ -164,6 +164,8 @@ function sanitizeWeek(s){
   if(typeof s.simple==='boolean')w.simple=s.simple;
   if(Array.isArray(s.excluded))w.excluded=s.excluded.filter(x=>typeof x==='string');
   if(Array.isArray(s.favs))w.favs=s.favs.filter(x=>typeof x==='string');
+  if(Array.isArray(s.favDays))w.favDays=s.favDays.filter(x=>Number.isInteger(x)&&x>=0&&x<7);
+  if(s.favAlt&&Array.isArray(s.favAlt.days))w.favAlt={days:s.favAlt.days.filter(x=>Number.isInteger(x)&&x>=0&&x<7),on:typeof s.favAlt.on==='string'&&/^\d{4}-\d\d-\d\d$/.test(s.favAlt.on)?s.favAlt.on:null};
   if(s.want&&typeof s.want==='object')['low','budget','fav'].forEach(k=>w.want[k]=!!s.want[k]);
   if(Array.isArray(s.ticks))w.ticks=s.ticks.filter(x=>typeof x==='string');
   if(Array.isArray(s.have))w.have=s.have.filter(x=>typeof x==='string');
@@ -186,7 +188,7 @@ rebuild();
 
 /* ---------- sync (your Claude account when available, this browser otherwise) ---------- */
 let remote=null, weekTimer=null, libTimer=null, weekDirty=false, libDirty=false;
-function weekData(){return{servings:state.servings,simple:state.simple,excluded:state.excluded,days:state.days,ticks:state.ticks,have:state.have,favs:state.favs,want:state.want}}
+function weekData(){return{servings:state.servings,simple:state.simple,excluded:state.excluded,days:state.days,ticks:state.ticks,have:state.have,favs:state.favs,favDays:state.favDays,favAlt:state.favAlt,want:state.want}}
 function persistWeek(){
   try{localStorage.setItem(KEY,JSON.stringify(weekData()))}catch(e){}
   if(!remote)return;weekDirty=true;clearTimeout(weekTimer);
@@ -246,6 +248,16 @@ const pool=()=>MEALS.filter(m=>!state.excluded.includes(m.id)&&(!state.simple||m
 const isFav=m=>state.favs.includes(m.id);
 // what you asked for this week: every ticked option has to match
 const wants=(m,w)=>{w=w||state.want;return(!w.low||isLow(m))&&(!w.budget||isBudget(m))&&(!w.fav||isFav(m))};
+// favourites can be kept to chosen days (say, the days someone's with you); no days chosen means all week
+// every-other-week days alternate from a week they were on; weeks are counted from their Mondays
+const isoDay=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+const altOn=(on)=>{on=on===undefined?state.favAlt.on:on;if(!on)return false;const[y,mo,da]=on.split('-').map(Number);
+  return Math.round((WS-new Date(y,mo-1,da))/(7*864e5))%2===0};
+// the days favourites go on this week, or null for every day
+const favList=(weekly,alt,here)=>{weekly=weekly||state.favDays;alt=alt||state.favAlt.days;here=here===undefined?altOn():here;
+  if(!weekly.length&&!alt.length)return null;return weekly.concat(here?alt:[])};
+const favDay=(i,w,list)=>{w=w||state.want;list=list===undefined?favList():list;return w.fav&&(!list||list.includes(i))};
+const wantsOn=(i,m)=>wants(m,Object.assign({},state.want,{fav:favDay(i)}));
 const PLABEL={chicken:'Chicken',turkey:'Turkey',beef:'Beef',pork:'Pork & ham',fish:'Fish',egg:'Eggs',veg:'Veggie'};
 function srcBefore(i,src){for(let j=i-1;j>=0;j--){const d=state.days[j];if(!d.skip&&d.id===src)return j}return -1}
 function pickFor(i,avoidList){
@@ -254,9 +266,12 @@ function pickFor(i,avoidList){
   const inWeek=new Set(others);const have=new Set();const pc={};
   others.forEach(id=>{freshKeys(byId[id]).forEach(k=>have.add(k));const p=byId[id].p;pc[p]=(pc[p]||0)+1});
   const neigh=[days[i-1],days[i+1]].filter(d=>d&&!d.skip&&d.id&&byId[d.id]).map(d=>byId[d.id].p);
-  const base=pool().filter(m=>!avoid.has(m.id)&&(!m.uses||srcBefore(i,m.uses)>=0)),strict=base.filter(m=>wants(m));
+  const base=pool().filter(m=>!avoid.has(m.id)&&(!m.uses||srcBefore(i,m.uses)>=0)),strict=base.filter(m=>wantsOn(i,m));
+  // on days that aren't favourites days, leave the favourites free for the days they're wanted
+  const spare=state.want.fav&&!favDay(i)?m=>!isFav(m):()=>true;
   // stick to what was asked for; if that's run out, fill from the rest rather than repeat a meal
-  let list=strict.filter(m=>!inWeek.has(m.id));if(!list.length)list=base.filter(m=>!inWeek.has(m.id));
+  let list=strict.filter(m=>!inWeek.has(m.id)&&spare(m));if(!list.length)list=strict.filter(m=>!inWeek.has(m.id));
+  if(!list.length)list=base.filter(m=>!inWeek.has(m.id)&&spare(m));if(!list.length)list=base.filter(m=>!inWeek.has(m.id));
   if(!list.length)list=strict.length?strict:base;if(!list.length)return null;
   let best=null,bs=-Infinity;
   list.forEach(m=>{let s=0;freshKeys(m).forEach(k=>{s+=have.has(k)?1.2:-0.7});
@@ -318,7 +333,7 @@ function renderWeek(){
   const avg=cooking.length?Math.round(cooking.reduce((a,d)=>a+byId[d.id].kcal,0)/cooking.length/10)*10:0;
   const {map}=shopping();const n=Object.keys(map).length;
   const tiles=state.days.map((d,i)=>{
-    const m=d.id?byId[d.id]:null;const locked=!!d.locked&&!d.skip&&!!m;const day=DOW[i]+' '+dayDate(i).getDate();
+    const m=d.id?byId[d.id]:null;const locked=!!d.locked&&!d.skip&&!!m;const day=DOW[i]+' '+dayDate(i).getDate()+(favDay(i)&&favList()?' <span class="favmark" title="Favourites day">'+ICON.heart+'</span>':'');
     if(d.skip)return '<button type="button" class="tile off" data-action="choose" data-i="'+i+'"><span class="tband p-off">'+ICON.moon+'</span><span class="tbody"><span class="tday">'+day+'</span><span class="tname">Night off</span><span class="tmeta">Leftovers or a takeaway</span></span></button>';
     if(!m)return '<button type="button" class="tile" data-action="choose" data-i="'+i+'"><span class="tband p-off">'+ICON.plus+'</span><span class="tbody"><span class="tday">'+day+'</span><span class="tname">Pick a meal</span><span class="tmeta">Tap to choose</span></span></button>';
     let note='';
@@ -393,6 +408,7 @@ function chooseHTML(i){
    grp('Familiar',avail.filter(m=>m.simple))+grp('A bit different',avail.filter(m=>!m.simple));
 }
 function planHTML(){
+  if(!ui.favDays){ui.favDays=state.favDays.slice();ui.favAlt=state.favAlt.days.slice();ui.altHere=state.favAlt.on?altOn():true}
   const w=state.want,opt=(id,on,title,sub)=>'<label class="setrow switch" for="'+id+'"><span>'+title+'<small>'+sub+'</small></span><input type="checkbox" id="'+id+'"'+(on?' checked':'')+'><span class="track"></span></label>';
   return head('What do you fancy this week?')+
    '<p class="hint">Pick any, all or none. Each one you pick narrows it down. Locked days and nights off stay as they are.</p>'+
@@ -400,6 +416,12 @@ function planHTML(){
    opt('wantLow',w.low,'Low calorie','500 kcal or under')+
    opt('wantBudget',w.budget,'Budget friendly','Cheaper meals: mince, sausages, beans, eggs and the like')+
    opt('wantFav',w.fav,'Family favourites','The meals you\'ve marked with a heart on the Meals tab')+
+   '<div class="favdays" id="favDaysRow"'+(w.fav?'':' hidden')+'><p class="hint">Favourites on which days? Leave both rows empty for the whole week.</p>'+
+   '<h4>Every week</h4><div class="daychips" role="group" aria-label="Favourites every week">'+DOW.map((d,i)=>'<button type="button" class="fbtn" data-action="favday" data-d="'+i+'" aria-pressed="'+ui.favDays.includes(i)+'">'+d+'</button>').join('')+'</div>'+
+   '<h4>Every other week</h4><div class="daychips" role="group" aria-label="Favourites every other week">'+DOW.map((d,i)=>'<button type="button" class="fbtn" data-action="favalt" data-d="'+i+'" aria-pressed="'+ui.favAlt.includes(i)+'">'+d+'</button>').join('')+'</div>'+
+   '<div class="althere" id="altHere"'+(ui.favAlt.length?'':' hidden')+'><span>On those days the week of '+fmtDate(WS)+'?</span><div class="seg2 yn" role="group" aria-label="Every other week days this week">'+
+   '<button type="button" class="fbtn" data-action="althere" data-v="1" aria-pressed="'+ui.altHere+'">Yes</button><button type="button" class="fbtn" data-action="althere" data-v="0" aria-pressed="'+!ui.altHere+'">No</button></div></div>'+
+   '</div>'+
    opt('wantSimple',state.simple,'Keep it familiar','Only everyday British meals')+
    '</div><p class="status" id="wantCount" aria-live="polite">'+wantCountText()+'</p>'+
    '<button type="button" class="btn btn-primary btn-block" data-action="plan-go">Plan my week</button>';
@@ -407,10 +429,18 @@ function planHTML(){
 function wantFromSheet(){return{w:{low:!!($('wantLow')||{}).checked,budget:!!($('wantBudget')||{}).checked,fav:!!($('wantFav')||{}).checked},simple:!!($('wantSimple')||{}).checked}}
 function wantCountText(){
   const f=$('wantLow')?wantFromSheet():{w:state.want,simple:state.simple};
-  const n=MEALS.filter(m=>!state.excluded.includes(m.id)&&(!f.simple||m.simple)&&!m.uses&&wants(m,f.w)).length;
-  const need=state.days.filter(d=>!d.skip&&!d.locked).length;
+  const fd=ui.favDays?favList(ui.favDays,ui.favAlt,ui.altHere):favList(),open=state.days.map((d,i)=>!d.skip&&!d.locked?i:-1).filter(i=>i>=0);
+  const avail=w=>MEALS.filter(m=>!state.excluded.includes(m.id)&&(!f.simple||m.simple)&&!m.uses&&wants(m,w)).length;
   if(f.w.fav&&!state.favs.length)return 'You haven\'t marked any favourites yet. Tap the heart next to a meal on the Meals tab.';
-  return n+(n===1?' meal matches':' meals match')+(n<need?'. That\'s not enough for '+need+' days, so the rest will come from your other meals.':'.');
+  const plural=(n,a,b)=>n+(n===1?a:b);
+  if(f.w.fav&&fd){
+    const fdays=open.filter(i=>fd.includes(i)).length,odays=open.length-fdays;
+    const nf=avail(f.w),no=avail(Object.assign({},f.w,{fav:false}));
+    return plural(nf,' favourite',' favourites')+' for '+plural(fdays,' day',' days')+(nf<fdays?' (not enough, so some will come from your other meals)':'')+
+      (odays?', and '+no+' meals to choose from for the other '+plural(odays,' day',' days'):'')+'.';
+  }
+  const n=avail(f.w);
+  return plural(n,' meal matches',' meals match')+(n<open.length?'. That\'s not enough for '+open.length+' days, so the rest will come from your other meals.':'.');
 }
 
 function settingsHTML(){
@@ -675,9 +705,15 @@ function setDay(i,id){const d=state.days[i];d.id=id;d.skip=false;d.locked=true;v
 document.addEventListener('click',e=>{
   const b=e.target.closest('[data-action]');if(!b)return;const a=b.dataset.action;const i=b.dataset.i!=null?+b.dataset.i:null;
   if(a==='serv'){state.servings=Math.min(8,Math.max(1,state.servings+ +b.dataset.d));update()}
-  else if(a==='plan'){openSheet(planHTML())}
-  else if(a==='plan-go'){const f=wantFromSheet();state.want=f.w;state.simple=f.simple;plan();update();closeSheet();
-    const picked=state.days.filter(d=>!d.skip&&d.id&&byId[d.id]),hit=picked.filter(d=>wants(byId[d.id])).length;
+  else if(a==='plan'){ui.favDays=null;openSheet(planHTML())}
+  else if(a==='favday'||a==='favalt'){const d=+b.dataset.d,k=a==='favday'?'favDays':'favAlt',o=a==='favday'?'favAlt':'favDays';
+    ui[k]=ui[k].includes(d)?ui[k].filter(x=>x!==d):ui[k].concat(d).sort();ui[o]=ui[o].filter(x=>x!==d); // a day is one or the other
+    document.querySelectorAll('[data-action="favday"],[data-action="favalt"]').forEach(x=>x.setAttribute('aria-pressed',ui[x.dataset.action==='favday'?'favDays':'favAlt'].includes(+x.dataset.d)));
+    $('altHere').hidden=!ui.favAlt.length;$('wantCount').textContent=wantCountText()}
+  else if(a==='althere'){ui.altHere=b.dataset.v==='1';document.querySelectorAll('[data-action="althere"]').forEach(x=>x.setAttribute('aria-pressed',(x.dataset.v==='1')===ui.altHere));$('wantCount').textContent=wantCountText()}
+  else if(a==='plan-go'){const f=wantFromSheet();state.want=f.w;state.simple=f.simple;if(ui.favDays){state.favDays=ui.favDays.slice();const next=new Date(WS);next.setDate(next.getDate()+7);
+      state.favAlt={days:ui.favAlt.slice(),on:ui.favAlt.length?isoDay(ui.altHere?WS:next):null}}plan();update();closeSheet();
+    const picked=state.days.map((d,i)=>[d,i]).filter(([d])=>!d.skip&&d.id&&byId[d.id]),hit=picked.filter(([d,i])=>wantsOn(i,byId[d.id])).length;
     toast(f.w.low||f.w.budget||f.w.fav?(hit<picked.length?hit+' of '+picked.length+' teas match what you picked':'New week planned to suit'):'New week planned')}
   else if(a==='fav'){const id=b.dataset.id;const on=state.favs.includes(id);state.favs=on?state.favs.filter(x=>x!==id):state.favs.concat(id);update();
     if(b.dataset.sheet){const m=byId[id];if(m)openSheet(recipeHTML(m,b.dataset.i!=null&&b.dataset.i!==''?+b.dataset.i:null))}
@@ -727,7 +763,7 @@ document.addEventListener('change',e=>{
   const t=e.target;
   if(t.dataset&&t.dataset.shot){onShot(t);return}
   if(t.id==='shotKeep'){scan.keepFirst=t.checked;return}
-  if(t.id&&t.id.startsWith('want')&&$('wantCount')){$('wantCount').textContent=wantCountText();return}
+  if(t.id&&t.id.startsWith('want')&&$('wantCount')){if(t.id==='wantFav')$('favDaysRow').hidden=!t.checked;$('wantCount').textContent=wantCountText();return}
   if(t.id==='simpleToggle'){state.simple=t.checked;update();toast(t.checked?'Only familiar meals will be planned':'All meals can be planned')}
   else if(t.dataset.tick){const k=t.dataset.tick;state.ticks=t.checked?state.ticks.concat(k):state.ticks.filter(x=>x!==k);update()}
   else if(t.dataset.rot){const id=t.dataset.rot;state.excluded=t.checked?state.excluded.filter(x=>x!==id):state.excluded.concat(id);update()}
