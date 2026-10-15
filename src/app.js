@@ -110,7 +110,7 @@ const ICON={
 };
 
 /* ---------- state ---------- */
-function defaultWeek(){return{servings:4,simple:true,excluded:[],days:DOW.map(()=>({id:null,locked:false,skip:false})),ticks:[]}}
+function defaultWeek(){return{servings:4,simple:true,excluded:[],days:DOW.map(()=>({id:null,locked:false,skip:false})),ticks:[],have:[]}}
 const ui={tab:'week',filter:'all',q:'',hist:{}};
 let state=defaultWeek(), lib={meals:[],ing:{}};
 let ING={}, MEALS=[], byId={};
@@ -124,6 +124,7 @@ function sanitizeWeek(s){
   if(typeof s.simple==='boolean')w.simple=s.simple;
   if(Array.isArray(s.excluded))w.excluded=s.excluded.filter(x=>typeof x==='string');
   if(Array.isArray(s.ticks))w.ticks=s.ticks.filter(x=>typeof x==='string');
+  if(Array.isArray(s.have))w.have=s.have.filter(x=>typeof x==='string');
   if(Array.isArray(s.days)&&s.days.length===7)w.days=s.days.map(d=>({id:d&&typeof d.id==='string'?d.id:null,locked:!!(d&&d.locked),skip:!!(d&&d.skip)}));
   return w;
 }
@@ -143,7 +144,7 @@ rebuild();
 
 /* ---------- sync (your Claude account when available, this browser otherwise) ---------- */
 let remote=null, weekTimer=null, libTimer=null, weekDirty=false, libDirty=false;
-function weekData(){return{servings:state.servings,simple:state.simple,excluded:state.excluded,days:state.days,ticks:state.ticks}}
+function weekData(){return{servings:state.servings,simple:state.simple,excluded:state.excluded,days:state.days,ticks:state.ticks,have:state.have}}
 function persistWeek(){
   try{localStorage.setItem(KEY,JSON.stringify(weekData()))}catch(e){}
   if(!remote)return;weekDirty=true;clearTimeout(weekTimer);
@@ -235,7 +236,8 @@ function shopping(){
   state.days.forEach((d,i)=>{if(d.skip||!d.id||!byId[d.id])return;const m=byId[d.id];
     m.ing.forEach(([k,q])=>add(k,q,m.name));
     if(m.uses&&srcBefore(i,m.uses)>=0){const s=byId[m.uses];s.ing.forEach(([k,q])=>{if(ING[k]&&!ING[k].carb)add(k,q,s.name+' (double batch)')})}});
-  return{map,cup};
+  const have={};state.have.forEach(k=>{if(map[k]){have[k]=map[k];delete map[k]}});
+  return{map,cup,have};
 }
 function doubles(){const s=new Set();state.days.forEach((d,i)=>{if(d.skip||!d.id||!byId[d.id])return;const m=byId[d.id];if(m.uses){const j=srcBefore(i,m.uses);if(j>=0)s.add(j)}});return s}
 
@@ -280,17 +282,19 @@ function renderWeek(){
   $('days').innerHTML=tiles.join('');
 }
 function renderShop(){
-  const {map,cup}=shopping();
+  const {map,cup,have}=shopping();
   $('shopLabel').textContent=state.ticks.length?state.ticks.filter(k=>map[k]).length+' of '+Object.keys(map).length+' ticked':'';
   let html='';
   AISLES.forEach(([a,label])=>{
     const ks=Object.keys(map).filter(k=>ING[k].a===a).sort((x,y)=>ING[x].n.localeCompare(ING[y].n));
     if(!ks.length)return;
     html+='<div class="aisle"><h3>'+label+'</h3>'+ks.map(k=>{const it=map[k];const done=state.ticks.includes(k);
-      return '<label class="item'+(done?' done':'')+'"><input type="checkbox" id="tick-'+esc(k)+'" data-tick="'+esc(k)+'"'+(done?' checked':'')+'><span><span class="iname">'+esc(ING[k].n)+(it.meals.length>1?'<span class="multi">'+it.meals.length+' teas</span>':'')+'</span><span class="iused">'+esc(it.meals.join(', '))+'</span></span><span class="iqty">'+fmtQty(k,it.q)+'</span></label>'}).join('')+'</div>';
+      return '<label class="item'+(done?' done':'')+'"><input type="checkbox" id="tick-'+esc(k)+'" data-tick="'+esc(k)+'"'+(done?' checked':'')+'><span><span class="iname">'+esc(ING[k].n)+(it.meals.length>1?'<span class="multi">'+it.meals.length+' teas</span>':'')+'</span><span class="iused">'+esc(it.meals.join(', '))+'</span></span><span class="iqty">'+fmtQty(k,it.q)+'</span><button type="button" class="havebtn" data-action="have" data-k="'+esc(k)+'" aria-label="Already got '+esc(ING[k].n)+', take it off the list">Got it</button></label>'}).join('')+'</div>';
   });
   if(cup.size)html+='<div class="aisle"><h3>Check the cupboard</h3><div class="cupboard">'+esc([...cup].map(k=>ING[k].n).sort().join(', '))+'</div></div>';
-  if(!Object.keys(map).length)html='<p class="hint" style="margin-top:12px">No teas planned yet. Tap <b>Plan my week</b> to fill the list.</p>';
+  const hk=Object.keys(have).sort((x,y)=>ING[x].n.localeCompare(ING[y].n));
+  if(hk.length)html+='<div class="aisle"><h3>Already in</h3>'+hk.map(k=>'<div class="item had"><span></span><span><span class="iname">'+esc(ING[k].n)+'</span><span class="iused">'+esc(have[k].meals.join(', '))+'</span></span><span class="iqty">'+fmtQty(k,have[k].q)+'</span><button type="button" class="havebtn" data-action="unhave" data-k="'+esc(k)+'" aria-label="Put '+esc(ING[k].n)+' back on the list">Put back</button></div>').join('')+'</div>';
+  if(!Object.keys(map).length&&!hk.length)html='<p class="hint" style="margin-top:12px">No teas planned yet. Tap <b>Plan my week</b> to fill the list.</p>';
   $('shop').innerHTML=html;
 }
 function renderMeals(){
@@ -587,6 +591,8 @@ document.addEventListener('click',e=>{
   else if(a==='close'){closeSheet()}
   else if(a==='filter'){ui.filter=b.dataset.f;render()}
   else if(a==='untick'){state.ticks=[];update()}
+  else if(a==='have'){e.preventDefault();const k=b.dataset.k;if(!state.have.includes(k))state.have=state.have.concat(k);state.ticks=state.ticks.filter(x=>x!==k);update();toast(ING[k].n+' taken off the list')}
+  else if(a==='unhave'){const k=b.dataset.k;state.have=state.have.filter(x=>x!==k);update();toast(ING[k].n+' is back on the list')}
   else if(a==='copy'){const txt=listText();const fb=$('copyFallback');
     const fallback=()=>{fb.value=txt;fb.hidden=false;fb.focus();fb.select();toast('Select the text below and copy it')};
     try{navigator.clipboard.writeText(txt).then(()=>{fb.hidden=true;toast('Shopping list copied')},fallback)}catch(err){fallback()}}
