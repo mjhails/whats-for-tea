@@ -452,7 +452,7 @@ function scanHTML(){
      '<label class="field" for="pasteText">Recipe text<textarea id="pasteText" rows="9" placeholder="Paste the recipe here, with the meal name on the first line">'+esc(scan.text||'')+'</textarea></label>'+
      '<label class="shot" for="shot-front" style="max-width:180px"><input type="file" accept="image/*" id="shot-front" data-shot="front" class="sr"><span class="shotin">'+(scan.front?'<img src="'+URL.createObjectURL(scan.front)+'" alt="Photo for the meal">':ICON.camera+'<b>Photo</b><small>Optional, kept with the meal</small>')+'</span></label>';
   }else if(card){
-    body='<p class="hint">Take or choose a photo of each side of the card.</p>'+
+    body='<p class="hint">Take or choose a photo of each side of the card. Landscape or portrait both work, and so does a card that\'s sideways in the photo. Get close so the card fills the frame.</p>'+
      '<div class="shots">'+shotSlot('front','Front','Photo and name side')+shotSlot('back','Back','Ingredients and method')+'</div>';
   }else{
     const n=maxShots();

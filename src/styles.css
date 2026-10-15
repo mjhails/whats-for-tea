@@ -187,13 +187,14 @@ label.switch:not(.setrow){display:flex;align-items:center;gap:10px;font-size:15p
 .sband{position:relative;overflow:hidden}
 .sband.has-img{height:190px}
 .licon{position:relative;overflow:hidden}
-.shots{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.shots{display:grid;grid-template-columns:minmax(0,1fr);gap:12px}
+.shots .shotin{aspect-ratio:3/2}
 .shot{display:block;cursor:pointer}
 .shotin{aspect-ratio:3/4;border:1.5px dashed var(--muted);border-radius:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;text-align:center;padding:10px;overflow:hidden;position:relative;color:var(--muted)}
 .shotin svg{width:28px;height:28px;margin-bottom:4px}
 .shotin b{color:var(--ink);font-size:15px}
 .shotin small{font-size:12.5px}
-.shotin img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.shotin img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:var(--card)}
 .shot input:focus-visible + .shotin{outline:2px solid var(--accent);outline-offset:2px}
 .seg2{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
 .seg2 .fbtn{text-align:center}
