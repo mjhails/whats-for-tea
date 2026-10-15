@@ -31,6 +31,9 @@ const BASE_ING={
   stock:{n:'Stock cubes',a:'cup'}, gravy:{n:'Gravy granules',a:'cup'}, paprika:{n:'Paprika',a:'cup'}, cumin:{n:'Cumin',a:'cup'},
   chilli:{n:'Chilli powder',a:'cup'}, curry:{n:'Curry powder',a:'cup'}, herbs:{n:'Mixed herbs',a:'cup'}, soy:{n:'Soy sauce',a:'cup'},
   beefMince:{n:'5% beef mince',a:'meat',u:'g'}, broccoli:{n:'Broccoli',a:'veg',u:'x'}, sweetPotato:{n:'Sweet potatoes',a:'veg',u:'g',carb:1}, coconutMilk:{n:'Light coconut milk',a:'tins',u:'tin'},
+  dicedBeef:{n:'Diced beef',a:'meat',u:'g'}, bacon:{n:'Bacon medallions',a:'meat',u:'x'}, salmon:{n:'Salmon fillets',a:'frozen',u:'x'},
+  cabbage:{n:'Cabbage',a:'veg',u:'x'}, puffPastry:{n:'Light puff pastry sheet',a:'fridge',u:'x'}, couscous:{n:'Couscous',a:'tins',u:'g',carb:1},
+  suet:{n:'Vegetable suet',a:'tins',u:'g'}, pesto:{n:'Green pesto',a:'tins',u:'x'}, bbq:{n:'BBQ sauce',a:'cup'}, sweetChilli:{n:'Sweet chilli sauce',a:'cup'},
   oil:{n:'Spray oil',a:'cup'}, ketchup:{n:'Ketchup',a:'cup'}, vinegar:{n:'Vinegar',a:'cup'}, cornflour:{n:'Cornflour',a:'cup'}, mustard:{n:'Mustard',a:'cup'}
 };
 const AISLES=[['meat','Meat'],['fridge','Fridge'],['veg','Fruit & veg'],['frozen','Freezer'],['tins','Tins, pasta & rice'],['bread','Bread']];
@@ -103,7 +106,28 @@ const BUILTIN=[
  {id:'keema',name:'Beef keema with peas and rice',kcal:500,mins:30,simple:0,p:'beef',ing:[['beefMince',500],['onion',1],['garlic',3],['tomatoes',1],['frozenPeas',300],['rice',300],['curry']],steps:['Soften the onion and garlic, then brown the mince.','Stir in the curry powder, then the tomatoes. Simmer for 15 minutes.','Add the peas for the last 5 minutes and serve with rice.']},
  {id:'sweetpotcurry',name:'Sweet potato and chickpea curry',kcal:400,mins:35,simple:0,p:'veg',ing:[['sweetPotato',600],['chickpeas',1],['coconutMilk',1],['frozenSpinach',150],['onion',1],['garlic',2],['rice',250],['curry']],steps:['Soften the onion and garlic and stir in the curry powder.','Add the diced sweet potato, chickpeas, coconut milk and 200 ml of water. Simmer for 20 minutes until tender.','Stir in the spinach and serve with rice.']},
  {id:'porkstirfry',name:'Pork and broccoli noodle stir-fry',kcal:450,mins:20,simple:0,p:'pork',ing:[['porkSteaks',4],['noodles',250],['broccoli',1],['peppers',2],['garlic',2],['soy']],steps:['Cook the noodles as the pack says.','Slice the pork thinly and stir-fry until cooked, then add the garlic, broccoli and peppers for 5 minutes.','Toss in the noodles and soy sauce.']},
+ {id:'roastdinner',name:'Chicken roast dinner',kcal:600,mins:70,simple:1,p:'chicken',ing:[['chickenThigh',800],['potatoes',1000],['carrots',3],['frozenPeas',300],['onion',1],['gravy'],['oil'],['herbs']],steps:['Heat the oven to 200°C. Put the chicken thighs on a tray with a quartered onion, herbs and spray oil and roast for 45 minutes.','Par-boil the potato chunks for 8 minutes, drain, shake, spray with oil and roast for 50 minutes until crisp.','Boil the carrots and peas, make the gravy, and check the chicken is cooked through before serving.']},
+ {id:'beefstew',name:'Beef stew and dumplings',kcal:600,mins:150,simple:1,p:'beef',ing:[['dicedBeef',500],['carrots',3],['onion',2],['potatoes',600],['flour',150],['suet',60],['stock'],['herbs']],steps:['Brown the beef in batches, then add the chopped onions, carrots and potatoes.','Add 800 ml of stock and the herbs, cover and simmer gently (or cook at 160°C) for 2 hours until tender.','Mix 100 g of the flour with the suet, a pinch of salt and enough cold water to make a soft dough. Roll into 8 balls, sit them on the stew and cook covered for 20 minutes more.']},
+ {id:'bbqchicken',name:'BBQ chicken, wedges and corn',kcal:550,mins:45,simple:1,p:'chicken',ing:[['chickenThigh',600],['potatoes',800],['sweetcorn',1],['salad',1],['bbq'],['paprika'],['oil']],steps:['Cut the potatoes into wedges, toss with paprika and spray oil, and bake at 220°C for 35 minutes.','Coat the chicken thighs in BBQ sauce and bake alongside for 30 to 35 minutes until cooked through.','Warm the sweetcorn and serve with salad.']},
+ {id:'baconpasta',name:'Creamy bacon and pea pasta',kcal:500,mins:20,simple:1,p:'pork',ing:[['bacon',8],['pasta',320],['frozenPeas',200],['softCheese',150],['garlic',2]],steps:['Cook the pasta, adding the peas for the last 3 minutes. Save a mug of the water.','Fry the chopped bacon and garlic until golden.','Stir in the soft cheese with a splash of pasta water and toss everything together.']},
+ {id:'sausagetray',name:'Sausage and veg traybake',kcal:500,mins:45,simple:1,p:'pork',ing:[['sausages',8],['potatoes',800],['peppers',2],['onion',2],['carrots',2],['herbs'],['oil']],steps:['Chop the potatoes, peppers, onions and carrots into chunks and toss with herbs and spray oil.','Lay the sausages on top and roast at 200°C for 40 minutes, turning halfway.','Serve straight from the tray.']},
+ {id:'salmonrice',name:'Sweet chilli salmon with rice',kcal:550,mins:25,simple:0,p:'fish',ing:[['salmon',4],['rice',300],['frozenVeg',400],['sweetChilli'],['soy']],steps:['Cook the rice.','Brush the salmon with sweet chilli sauce and a dash of soy and bake at 200°C for 15 minutes.','Boil or steam the frozen veg and serve together.']},
+ {id:'pestopasta',name:'Chicken pesto pasta',kcal:550,mins:20,simple:1,p:'chicken',ing:[['chickenBreast',400],['pasta',320],['pesto',1],['peppers',1],['salad',1]],steps:['Cook the pasta.','Fry chicken strips and sliced pepper until the chicken is cooked through.','Toss with the pasta and a few spoons of pesto. Serve with salad.']},
+ {id:'bubble',name:'Bubble and squeak with sausages',kcal:500,mins:35,simple:1,p:'pork',ing:[['sausages',8],['potatoes',900],['cabbage',1],['onion',1],['bakedBeans',2],['oil']],steps:['Oven-bake the sausages at 200°C for 25 minutes.','Boil and roughly mash the potatoes. Fry the sliced onion and shredded cabbage until soft, then mix in the mash.','Fry the mixture in spray oil, pressing it flat, until crisp underneath. Serve with the sausages and beans.']},
+ {id:'tunapastasalad',name:'Tuna and sweetcorn pasta salad',kcal:450,mins:20,simple:1,p:'fish',ing:[['pasta',300],['tuna',2],['sweetcorn',1],['greekYog',150],['peppers',1],['salad',1]],steps:['Cook the pasta and cool it under cold water.','Mix the tuna, sweetcorn and chopped pepper with the yoghurt.','Stir through the pasta and serve on salad.']},
+ {id:'chickenpie',name:'Chicken and leek puff pie',kcal:600,mins:50,simple:1,p:'chicken',ing:[['chickenThigh',500],['leeks',2],['milk',300],['cornflour'],['puffPastry',1],['frozenPeas',200],['potatoes',600],['stock']],steps:['Brown the chicken pieces with the sliced leeks. Add the milk and half a stock cube, thicken with cornflour mixed with water, and tip into a pie dish.','Lay the pastry over the top, trim and make a small hole in the middle.','Bake at 200°C for 25 to 30 minutes until golden. Serve with boiled potatoes and peas.']},
+ {id:'couscous',name:'Moroccan chicken and chickpea couscous',kcal:500,mins:30,simple:0,p:'chicken',ing:[['chickenThigh',500],['chickpeas',1],['couscous',250],['peppers',2],['onion',1],['cumin'],['paprika'],['stock']],steps:['Fry the chicken pieces with the onion, peppers, cumin and paprika for 10 minutes.','Add the chickpeas and 150 ml of stock and simmer for 10 minutes until the chicken is cooked.','Pour 300 ml of boiling stock over the couscous, cover for 5 minutes, fluff up and serve with the chicken.']},
+ {id:'tacos',name:'Beef taco wraps',kcal:550,mins:25,simple:1,p:'beef',ing:[['beefMince',500],['wraps',8],['tomatoes',1],['onion',1],['salad',1],['cheese',60],['chilli'],['cumin']],steps:['Brown the mince with the onion, then add the chilli, cumin and tomatoes. Simmer for 10 minutes until thick.','Warm the wraps.','Fill with the mince, salad and a little cheese.']},
+ {id:'leekbake',name:'Leek, bacon and potato bake',kcal:500,mins:50,simple:1,p:'pork',ing:[['potatoes',1000],['leeks',2],['bacon',6],['milk',300],['flour',30],['cheese',60]],steps:['Slice the potatoes and boil for 6 minutes, then drain. Fry the sliced leeks and chopped bacon.','Whisk the flour into the cold milk and heat, stirring, until thick.','Layer the potatoes, leeks and bacon in a dish, pour over the sauce, top with cheese and bake at 200°C for 25 minutes.']},
+ {id:'lentilshepherd',name:'Veggie lentil shepherd\'s pie',kcal:450,mins:50,simple:1,p:'veg',ing:[['redLentils',200],['carrots',3],['onion',1],['frozenPeas',200],['tomatoes',1],['potatoes',1000],['cheese',40],['stock'],['herbs']],steps:['Soften the onion and diced carrots. Add the lentils, tomatoes, herbs and 500 ml of stock and simmer for 20 minutes, adding the peas at the end.','Boil and mash the potatoes.','Spoon the lentils into a dish, top with mash and cheese and bake at 200°C for 20 minutes.']},
+ {id:'sausagemeatballs',name:'Sausage meatball spaghetti',kcal:550,mins:30,simple:1,p:'pork',ing:[['sausages',8],['spaghetti',320],['tomatoes',2],['onion',1],['garlic',2],['herbs']],steps:['Squeeze the sausages out of their skins and roll into small meatballs. Brown them in a pan.','Add the onion and garlic, then the tomatoes and herbs, and simmer for 15 minutes.','Serve over the spaghetti.']},
+ {id:'beefpastabake',name:'Cheesy beef pasta bake',kcal:600,mins:35,simple:1,p:'beef',ing:[['beefMince',400],['pasta',320],['tomatoes',2],['onion',1],['cheese',80],['herbs']],steps:['Cook the pasta.','Brown the mince with the onion, add the tomatoes and herbs and simmer for 10 minutes.','Mix with the pasta, top with cheese and bake at 200°C for 15 minutes.']},
 ];
+
+// Meals that are cheap to make: mince, sausages, beans, eggs, lentils, thighs, tins and so on.
+const BUDGET=new Set(['bolognese','lentilbol','sausagemash','toad','sausagecass','jacketbeans','jackettuna','burgers','cottagepie','hotpot','cornedbeef','hiddenveg','maccheese','tunabake','traybake','meatballs','chilli','chillijackets','wrappizza','friedrice','omelette','beansegg','fishfingers','fishcakes','leeksoup','tomsoup','peaham','chickennoodlesoup','curry','shakshuka','dhal','spanishrice','burritos','veggiechilli','spanishomelette','bolbake','sausagepasta','hampasta','eggnoodles','minestrone','sweetpotcurry','roastdinner','bbqchicken','baconpasta','sausagetray','bubble','tunapastasalad','couscous','leekbake','lentilshepherd','sausagemeatballs','beefpastabake']);
+const isBudget=m=>m.custom?!!m.b:BUDGET.has(m.id);
+const isLow=m=>m.kcal<=500;
 
 const DOW=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 const DAYNAME=['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
@@ -121,12 +145,13 @@ const ICON={
  spark:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4l1.8 4.7L18.5 10.5l-4.7 1.8L12 17l-1.8-4.7L5.5 10.5l4.7-1.8z"/></svg>',
  basket:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 9h14l-1.3 9.5a2 2 0 0 1-2 1.5H8.3a2 2 0 0 1-2-1.5z"/><path d="M9 9V7a3 3 0 0 1 6 0v2"/></svg>',
  camera:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.5"/></svg>',
+ heart:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7a4.3 4.3 0 0 1 7.5 2.8C19.5 15.4 12 20 12 20z"/></svg>',
  list:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r="1"/><circle cx="4.5" cy="12" r="1"/><circle cx="4.5" cy="18" r="1"/></svg>'
 };
 
 /* ---------- state ---------- */
-function defaultWeek(){return{servings:4,simple:true,excluded:[],days:DOW.map(()=>({id:null,locked:false,skip:false})),ticks:[],have:[],noP:[]}}
-const ui={tab:'week',filter:'all',q:'',hist:{}};
+function defaultWeek(){return{servings:4,simple:true,excluded:[],days:DOW.map(()=>({id:null,locked:false,skip:false})),ticks:[],have:[],favs:[],want:{low:false,budget:false,fav:false}}}
+const ui={tab:'week',filter:'all',meat:null,q:'',hist:{}};
 let state=defaultWeek(), lib={meals:[],ing:{}};
 let ING={}, MEALS=[], byId={};
 let fresh=true;
@@ -138,7 +163,8 @@ function sanitizeWeek(s){
   if(Number.isFinite(+s.servings))w.servings=Math.min(8,Math.max(1,+s.servings));
   if(typeof s.simple==='boolean')w.simple=s.simple;
   if(Array.isArray(s.excluded))w.excluded=s.excluded.filter(x=>typeof x==='string');
-  if(Array.isArray(s.noP))w.noP=s.noP.filter(x=>PROTEINS.includes(x));
+  if(Array.isArray(s.favs))w.favs=s.favs.filter(x=>typeof x==='string');
+  if(s.want&&typeof s.want==='object')['low','budget','fav'].forEach(k=>w.want[k]=!!s.want[k]);
   if(Array.isArray(s.ticks))w.ticks=s.ticks.filter(x=>typeof x==='string');
   if(Array.isArray(s.have))w.have=s.have.filter(x=>typeof x==='string');
   if(Array.isArray(s.days)&&s.days.length===7)w.days=s.days.map(d=>({id:d&&typeof d.id==='string'?d.id:null,locked:!!(d&&d.locked),skip:!!(d&&d.skip)}));
@@ -147,7 +173,7 @@ function sanitizeWeek(s){
 function sanitizeLib(l){
   const out={meals:[],ing:{}};
   if(l&&l.ing&&typeof l.ing==='object')Object.keys(l.ing).forEach(k=>{const v=l.ing[k];if(v&&typeof v.n==='string'&&AISLE_KEYS.includes(v.a))out.ing[k]={n:v.n,a:v.a,u:v.u||undefined}});
-  if(l&&Array.isArray(l.meals))l.meals.forEach(m=>{if(m&&typeof m.id==='string'&&typeof m.name==='string'&&Array.isArray(m.ing)&&Array.isArray(m.steps))out.meals.push({id:m.id,name:m.name,kcal:+m.kcal||400,mins:+m.mins||30,simple:m.simple?1:0,p:PROTEINS.includes(m.p)?m.p:'veg',ing:m.ing.map(x=>Array.isArray(x)?x:(x&&typeof x.k==='string'?(x.q!=null?[x.k,x.q]:[x.k]):null)).filter(x=>Array.isArray(x)&&typeof x[0]==='string').map(x=>x.length>1?[x[0],+x[1]||0]:[x[0]]),steps:m.steps.map(String).slice(0,10),img:typeof m.img==='string'&&/^[A-Za-z0-9_-]{8,64}$/.test(m.img)?m.img:undefined,custom:1})});
+  if(l&&Array.isArray(l.meals))l.meals.forEach(m=>{if(m&&typeof m.id==='string'&&typeof m.name==='string'&&Array.isArray(m.ing)&&Array.isArray(m.steps))out.meals.push({id:m.id,name:m.name,kcal:+m.kcal||400,mins:+m.mins||30,simple:m.simple?1:0,p:PROTEINS.includes(m.p)?m.p:'veg',ing:m.ing.map(x=>Array.isArray(x)?x:(x&&typeof x.k==='string'?(x.q!=null?[x.k,x.q]:[x.k]):null)).filter(x=>Array.isArray(x)&&typeof x[0]==='string').map(x=>x.length>1?[x[0],+x[1]||0]:[x[0]]),steps:m.steps.map(String).slice(0,10),img:typeof m.img==='string'&&/^[A-Za-z0-9_-]{8,64}$/.test(m.img)?m.img:undefined,b:m.b?1:0,custom:1})});
   return out;
 }
 function rebuild(){
@@ -160,7 +186,7 @@ rebuild();
 
 /* ---------- sync (your Claude account when available, this browser otherwise) ---------- */
 let remote=null, weekTimer=null, libTimer=null, weekDirty=false, libDirty=false;
-function weekData(){return{servings:state.servings,simple:state.simple,excluded:state.excluded,days:state.days,ticks:state.ticks,have:state.have,noP:state.noP}}
+function weekData(){return{servings:state.servings,simple:state.simple,excluded:state.excluded,days:state.days,ticks:state.ticks,have:state.have,favs:state.favs,want:state.want}}
 function persistWeek(){
   try{localStorage.setItem(KEY,JSON.stringify(weekData()))}catch(e){}
   if(!remote)return;weekDirty=true;clearTimeout(weekTimer);
@@ -216,8 +242,10 @@ const fmtDate=d=>d.toLocaleDateString('en-GB',{day:'numeric',month:'short'});
 
 /* ---------- planning ---------- */
 const freshKeys=m=>m.ing.map(x=>x[0]).filter(k=>ING[k]&&ING[k].a!=='cup');
-const meatOn=m=>!state.noP.includes(m.p);
-const pool=()=>MEALS.filter(m=>!state.excluded.includes(m.id)&&meatOn(m)&&(!state.simple||m.simple));
+const pool=()=>MEALS.filter(m=>!state.excluded.includes(m.id)&&(!state.simple||m.simple));
+const isFav=m=>state.favs.includes(m.id);
+// what you asked for this week: every ticked option has to match
+const wants=(m,w)=>{w=w||state.want;return(!w.low||isLow(m))&&(!w.budget||isBudget(m))&&(!w.fav||isFav(m))};
 const PLABEL={chicken:'Chicken',turkey:'Turkey',beef:'Beef',pork:'Pork & ham',fish:'Fish',egg:'Eggs',veg:'Veggie'};
 function srcBefore(i,src){for(let j=i-1;j>=0;j--){const d=state.days[j];if(!d.skip&&d.id===src)return j}return -1}
 function pickFor(i,avoidList){
@@ -226,8 +254,10 @@ function pickFor(i,avoidList){
   const inWeek=new Set(others);const have=new Set();const pc={};
   others.forEach(id=>{freshKeys(byId[id]).forEach(k=>have.add(k));const p=byId[id].p;pc[p]=(pc[p]||0)+1});
   const neigh=[days[i-1],days[i+1]].filter(d=>d&&!d.skip&&d.id&&byId[d.id]).map(d=>byId[d.id].p);
-  const cands=pool().filter(m=>!avoid.has(m.id)&&(!m.uses||srcBefore(i,m.uses)>=0));
-  let list=cands.filter(m=>!inWeek.has(m.id));if(!list.length)list=cands;if(!list.length)return null;
+  const base=pool().filter(m=>!avoid.has(m.id)&&(!m.uses||srcBefore(i,m.uses)>=0)),strict=base.filter(m=>wants(m));
+  // stick to what was asked for; if that's run out, fill from the rest rather than repeat a meal
+  let list=strict.filter(m=>!inWeek.has(m.id));if(!list.length)list=base.filter(m=>!inWeek.has(m.id));
+  if(!list.length)list=strict.length?strict:base;if(!list.length)return null;
   let best=null,bs=-Infinity;
   list.forEach(m=>{let s=0;freshKeys(m).forEach(k=>{s+=have.has(k)?1.2:-0.7});
     if(neigh.includes(m.p))s-=2.5;if((pc[m.p]||0)>=2)s-=3;if(m.uses)s+=2.5;s+=Math.random()*3.5;
@@ -318,17 +348,18 @@ function renderShop(){
 function renderMeals(){
   document.querySelectorAll('#filters .fbtn').forEach(b=>b.setAttribute('aria-pressed',b.dataset.f===ui.filter));
   const q=ui.q.trim().toLowerCase();
-  $('meatFilters').innerHTML=PROTEINS.map(p=>{const on=!state.noP.includes(p);
+  $('meatFilters').innerHTML=PROTEINS.map(p=>{const on=ui.meat===p;
     return '<button type="button" class="mchip'+(on?' '+pcls({p}):'')+'" data-action="meat" data-p="'+p+'" aria-pressed="'+on+'">'+(PICON[p]||'')+PLABEL[p]+'</button>'}).join('');
-  const list=MEALS.filter(meatOn).filter(m=>ui.filter==='all'||(ui.filter==='simple'?m.simple:ui.filter==='different'?!m.simple:m.custom))
+  const F={all:()=>true,simple:m=>m.simple,different:m=>!m.simple,mine:m=>m.custom,low:isLow,budget:isBudget,fav:isFav};
+  const list=MEALS.filter(m=>!ui.meat||m.p===ui.meat).filter(F[ui.filter]||F.all)
     .filter(m=>!q||m.name.toLowerCase().includes(q)||m.ing.some(([k])=>ING[k]&&ING[k].n.toLowerCase().includes(q)));
-  const inRot=MEALS.filter(m=>meatOn(m)&&!state.excluded.includes(m.id)).length;
-  const offN=state.noP.length?MEALS.filter(m=>!meatOn(m)).length:0;
-  $('libStats').textContent=inRot+' of '+MEALS.length+' meals in rotation. Switch off any your family won\'t eat.'+(offN?' '+offN+' hidden by the meat buttons above.':'');
+  const inRot=MEALS.filter(m=>!state.excluded.includes(m.id)).length;
+  $('libStats').textContent=inRot+' of '+MEALS.length+' meals in rotation. Switch off any your family won\'t eat.'+(ui.meat?' Showing '+PLABEL[ui.meat].toLowerCase()+' meals only; tap it again to see them all.':'');
   $('lib').innerHTML=list.length?list.map(m=>{const on=!state.excluded.includes(m.id);
-    return '<li class="lrow'+(on?'':' out')+'"><button type="button" class="meal" data-action="librecipe" data-id="'+esc(m.id)+'"><span class="licon '+pcls(m)+'">'+picon(m)+mealImg(m,'limg')+'</span><span class="mname">'+esc(m.name)+'</span><span class="meta">'+m.kcal+' kcal · '+m.mins+' min'+(m.uses?' · leftovers':'')+(m.custom?' · yours':'')+'</span></button>'+
+    return '<li class="lrow'+(on?'':' out')+'"><button type="button" class="meal" data-action="librecipe" data-id="'+esc(m.id)+'"><span class="licon '+pcls(m)+'">'+picon(m)+mealImg(m,'limg')+'</span><span class="mname">'+esc(m.name)+'</span><span class="meta">'+m.kcal+' kcal · '+m.mins+' min'+(isBudget(m)?' · budget':'')+(m.uses?' · leftovers':'')+(m.custom?' · yours':'')+'</span></button>'+
+      '<button type="button" class="favbtn" data-action="fav" data-id="'+esc(m.id)+'" aria-pressed="'+isFav(m)+'" aria-label="Family favourite: '+esc(m.name)+'">'+ICON.heart+'</button>'+
       '<label class="switch"><input type="checkbox" id="rot-'+esc(m.id)+'" data-rot="'+esc(m.id)+'"'+(on?' checked':'')+'><span class="track"></span><span class="sr">Include '+esc(m.name)+' in plans</span></label></li>'}).join('')
-    :'<li class="hint">No meals match. Try another search, or add one.</li>';
+    :'<li class="hint">'+(ui.filter==='fav'&&!state.favs.length?'No favourites yet. Tap the heart next to any meal to add it.':'No meals match. Try another search, or add one.')+'</li>';
   $('syncNote').textContent=syncProblem||(remote?'Your plan, shopping list and library are shared with everyone signed in to What\'s for Tea?, and update live on every phone.':'Connecting to your shared plan…');
 }
 function render(){rebuild();renderControls();renderWeek();renderShop();renderMeals()}
@@ -348,18 +379,40 @@ function recipeHTML(m,dayIdx){
       '<button type="button" class="sbtn" data-action="skip" data-i="'+dayIdx+'" data-close="1">'+ICON.moon+'Night off</button></div>'}
   else actions='<div class="prow"><select id="putDay" aria-label="Day">'+DAYNAME.map((n,i)=>'<option value="'+i+'">'+n+'</option>').join('')+'</select><button type="button" class="btn btn-primary" data-action="put" data-id="'+esc(m.id)+'">Put it on this day</button></div>';
   if(m.custom)actions+='<div class="prow"><button type="button" class="btn" data-action="edit" data-id="'+esc(m.id)+'">Edit meal</button><button type="button" class="btn btn-danger" id="delBtn" data-action="delete" data-id="'+esc(m.id)+'">Delete meal</button></div>';
-  return '<div class="sband '+pcls(m)+(m.img?' has-img':'')+'">'+picon(m)+mealImg(m,'sbimg')+'</div>'+head(esc(m.name))+'<p class="meta" style="margin:-10px 0 0">'+(dayIdx!=null?DAYNAME[dayIdx]+' · ':'')+m.kcal+' kcal · '+m.mins+' min · serves '+state.servings+'</p>'+top+
+  return '<div class="sband '+pcls(m)+(m.img?' has-img':'')+'">'+picon(m)+mealImg(m,'sbimg')+'</div>'+head(esc(m.name))+'<p class="meta" style="margin:-10px 0 0">'+(dayIdx!=null?DAYNAME[dayIdx]+' · ':'')+m.kcal+' kcal · '+m.mins+' min · serves '+state.servings+(isBudget(m)?' · budget friendly':'')+'</p>'+
+   '<button type="button" class="favline" data-action="fav" data-sheet="1" data-id="'+esc(m.id)+'" data-i="'+(dayIdx!=null?dayIdx:'')+'" aria-pressed="'+isFav(m)+'">'+ICON.heart+(isFav(m)?'Family favourite':'Mark as a family favourite')+'</button>'+top+
    (m.note?'<p class="note">'+esc(m.note)+'</p>':'')+
    '<div><h4>Ingredients</h4>'+ingListHTML(m,sc)+'</div>'+
    '<div><h4>Method</h4><ol class="steps">'+m.steps.map(s=>'<li>'+esc(s)+'</li>').join('')+'</ol></div>'+actions;
 }
 function chooseHTML(i){
-  const d=state.days[i];const avail=MEALS.filter(m=>!state.excluded.includes(m.id)&&meatOn(m)).sort((a,b)=>a.name.localeCompare(b.name));
+  const d=state.days[i];const avail=MEALS.filter(m=>!state.excluded.includes(m.id)).sort((a,b)=>a.name.localeCompare(b.name));
   const grp=(t,arr)=>arr.length?'<div><h4>'+t+'</h4><div class="pick">'+arr.map(m=>'<button type="button" data-action="set" data-i="'+i+'" data-id="'+esc(m.id)+'"><span>'+esc(m.name)+'</span><span class="meta">'+m.kcal+' kcal</span></button>').join('')+'</div></div>':'';
   return head('Choose '+DAYNAME[i]+'\'s tea')+
    (d.skip?'':'<div class="pick"><button type="button" data-action="skip" data-i="'+i+'" data-close="1"><span>Night off</span><span class="meta">Leftovers or a takeaway</span></button></div>')+
    grp('Familiar',avail.filter(m=>m.simple))+grp('A bit different',avail.filter(m=>!m.simple));
 }
+function planHTML(){
+  const w=state.want,opt=(id,on,title,sub)=>'<label class="setrow switch" for="'+id+'"><span>'+title+'<small>'+sub+'</small></span><input type="checkbox" id="'+id+'"'+(on?' checked':'')+'><span class="track"></span></label>';
+  return head('What do you fancy this week?')+
+   '<p class="hint">Pick any, all or none. Each one you pick narrows it down. Locked days and nights off stay as they are.</p>'+
+   '<div class="setlist">'+
+   opt('wantLow',w.low,'Low calorie','500 kcal or under')+
+   opt('wantBudget',w.budget,'Budget friendly','Cheaper meals: mince, sausages, beans, eggs and the like')+
+   opt('wantFav',w.fav,'Family favourites','The meals you\'ve marked with a heart on the Meals tab')+
+   opt('wantSimple',state.simple,'Keep it familiar','Only everyday British meals')+
+   '</div><p class="status" id="wantCount" aria-live="polite">'+wantCountText()+'</p>'+
+   '<button type="button" class="btn btn-primary btn-block" data-action="plan-go">Plan my week</button>';
+}
+function wantFromSheet(){return{w:{low:!!($('wantLow')||{}).checked,budget:!!($('wantBudget')||{}).checked,fav:!!($('wantFav')||{}).checked},simple:!!($('wantSimple')||{}).checked}}
+function wantCountText(){
+  const f=$('wantLow')?wantFromSheet():{w:state.want,simple:state.simple};
+  const n=MEALS.filter(m=>!state.excluded.includes(m.id)&&(!f.simple||m.simple)&&!m.uses&&wants(m,f.w)).length;
+  const need=state.days.filter(d=>!d.skip&&!d.locked).length;
+  if(f.w.fav&&!state.favs.length)return 'You haven\'t marked any favourites yet. Tap the heart next to a meal on the Meals tab.';
+  return n+(n===1?' meal matches':' meals match')+(n<need?'. That\'s not enough for '+need+' days, so the rest will come from your other meals.':'.');
+}
+
 function settingsHTML(){
   return head('Settings')+'<div class="setlist"><div class="setrow"><span>Portions per tea</span><div class="stepper"><button type="button" id="servMinus" data-action="serv" data-d="-1" aria-label="Fewer portions">−</button><output id="servOut" aria-live="polite">'+state.servings+'</output><button type="button" id="servPlus" data-action="serv" data-d="1" aria-label="More portions">+</button></div></div>'+
    '<label class="setrow switch" for="simpleToggle"><span>Keep it familiar<small>Only plan everyday British meals</small></span><input type="checkbox" id="simpleToggle"'+(state.simple?' checked':'')+'><span class="track"></span></label>'+
@@ -573,6 +626,7 @@ function formHTML(m){
    '<label class="field" for="fMins">Minutes<input type="number" id="fMins" min="5" max="300" value="'+(m?m.mins:'')+'" placeholder="30"></label>'+
    '<label class="field" for="fP">Main<select id="fP">'+PROTEINS.map(p=>'<option'+(m&&m.p===p?' selected':'')+'>'+p+'</option>').join('')+'</select></label></div>'+
    '<label class="switch"><input type="checkbox" id="fSimple"'+(!m||m.simple?' checked':'')+'><span class="track"></span>Familiar (shows when "Keep it familiar" is on)</label>'+
+   '<label class="switch"><input type="checkbox" id="fBudget"'+(m&&(m.custom?m.b:m.id&&isBudget(m))?' checked':'')+'><span class="track"></span>Budget friendly</label>'+
    '<div><h4>Ingredients for 4 portions</h4><p class="hint" style="margin-bottom:8px">Pick from the list so it joins up with your shopping list. Spices and sauces can be "cupboard".</p><div id="fIngs" style="display:flex;flex-direction:column;gap:6px">'+rows+'</div>'+
    '<button type="button" class="btn" style="margin-top:8px" data-action="f-addrow">Add ingredient</button></div>'+
    '<label class="field" for="fSteps">Method, one step per line<textarea id="fSteps" rows="5">'+esc(m?m.steps.join('\n'):'')+'</textarea></label>'+
@@ -596,7 +650,7 @@ async function saveForm(){
   if(!steps.length){err.textContent='Add at least one method step.';$('fSteps').focus();return}
   const meal={id:editingId||('c_'+name.toLowerCase().replace(/[^a-z0-9]+/g,'').slice(0,20)+'_'+Date.now().toString(36)),name:name.slice(0,80),
     kcal:Math.min(1200,Math.max(100,Math.round(+$('fKcal').value||400))),mins:Math.min(300,Math.max(5,Math.round(+$('fMins').value||30))),
-    simple:$('fSimple').checked?1:0,p:$('fP').value,ing,steps};
+    simple:$('fSimple').checked?1:0,b:$('fBudget').checked?1:0,p:$('fP').value,ing,steps};
   const prev=lib.meals.find(x=>x.id===meal.id);if(prev&&prev.img)meal.img=prev.img;
   const wasScan=fromScan;
   if(fromScan&&scanDraftPhoto&&assetsApi){err.textContent='Saving the photo…';try{const up=await assetsApi.upload(scanDraftPhoto);if(up&&up.id)meal.img=up.id}catch(e){}err.textContent=''}
@@ -621,7 +675,13 @@ function setDay(i,id){const d=state.days[i];d.id=id;d.skip=false;d.locked=true;v
 document.addEventListener('click',e=>{
   const b=e.target.closest('[data-action]');if(!b)return;const a=b.dataset.action;const i=b.dataset.i!=null?+b.dataset.i:null;
   if(a==='serv'){state.servings=Math.min(8,Math.max(1,state.servings+ +b.dataset.d));update()}
-  else if(a==='plan'){plan();update();toast('New week planned')}
+  else if(a==='plan'){openSheet(planHTML())}
+  else if(a==='plan-go'){const f=wantFromSheet();state.want=f.w;state.simple=f.simple;plan();update();closeSheet();
+    const picked=state.days.filter(d=>!d.skip&&d.id&&byId[d.id]),hit=picked.filter(d=>wants(byId[d.id])).length;
+    toast(f.w.low||f.w.budget||f.w.fav?(hit<picked.length?hit+' of '+picked.length+' teas match what you picked':'New week planned to suit'):'New week planned')}
+  else if(a==='fav'){const id=b.dataset.id;const on=state.favs.includes(id);state.favs=on?state.favs.filter(x=>x!==id):state.favs.concat(id);update();
+    if(b.dataset.sheet){const m=byId[id];if(m)openSheet(recipeHTML(m,b.dataset.i!=null&&b.dataset.i!==''?+b.dataset.i:null))}
+    toast(on?'Removed from family favourites':byId[id].name+' is a family favourite')}
   else if(a==='tab'){ui.tab=b.dataset.tab;render();window.scrollTo({top:0})}
   else if(a==='swap'){const d=state.days[i];const cur=d.id;const h=ui.hist[i]||[];if(cur)h.push(cur);ui.hist[i]=h.slice(-6);
     let n=pickFor(i,[cur].concat(ui.hist[i]));if(!n)n=pickFor(i,[cur]);if(n){d.id=n;d.locked=false}validate();update();if(b.dataset.close)closeSheet();if(n)toast(DAYNAME[i]+': '+byId[n].name)}
@@ -637,11 +697,7 @@ document.addEventListener('click',e=>{
   else if(a==='close'){closeSheet()}
   else if(a==='filter'){ui.filter=b.dataset.f;render()}
   else if(a==='untick'){state.ticks=[];update()}
-  else if(a==='meat'){const p=b.dataset.p;const off=state.noP.includes(p);
-    if(!off&&state.noP.length>=PROTEINS.length-1){toast('Keep at least one type on');return}
-    state.noP=off?state.noP.filter(x=>x!==p):state.noP.concat(p);
-    let n=0;if(!off)state.days.forEach((d,j)=>{if(!d.skip&&!d.locked&&d.id&&byId[d.id]&&byId[d.id].p===p){d.id=pickFor(j,[d.id]);n++}});
-    validate();update();toast(PLABEL[p]+(off?' meals are back on':' meals turned off'+(n?', '+n+(n>1?' days':' day')+' re-planned':'')))}
+  else if(a==='meat'){ui.meat=ui.meat===b.dataset.p?null:b.dataset.p;renderMeals()}
   else if(a==='have'){e.preventDefault();const k=b.dataset.k;if(!state.have.includes(k))state.have=state.have.concat(k);state.ticks=state.ticks.filter(x=>x!==k);update();toast(ING[k].n+' taken off the list')}
   else if(a==='unhave'){const k=b.dataset.k;state.have=state.have.filter(x=>x!==k);update();toast(ING[k].n+' is back on the list')}
   else if(a==='copy'){const txt=listText();const fb=$('copyFallback');
@@ -671,6 +727,7 @@ document.addEventListener('change',e=>{
   const t=e.target;
   if(t.dataset&&t.dataset.shot){onShot(t);return}
   if(t.id==='shotKeep'){scan.keepFirst=t.checked;return}
+  if(t.id&&t.id.startsWith('want')&&$('wantCount')){$('wantCount').textContent=wantCountText();return}
   if(t.id==='simpleToggle'){state.simple=t.checked;update();toast(t.checked?'Only familiar meals will be planned':'All meals can be planned')}
   else if(t.dataset.tick){const k=t.dataset.tick;state.ticks=t.checked?state.ticks.concat(k):state.ticks.filter(x=>x!==k);update()}
   else if(t.dataset.rot){const id=t.dataset.rot;state.excluded=t.checked?state.excluded.filter(x=>x!==id):state.excluded.concat(id);update()}
