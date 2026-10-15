@@ -24,6 +24,43 @@ function getWorker() {
   return workerP;
 }
 
+// Greyscale and stretch the contrast so printed text stands out from coloured
+// card backgrounds and glare. Tesseract does the black-and-white step itself.
+async function prep(blob) {
+  const bmp = await createImageBitmap(blob);
+  const c = document.createElement("canvas");
+  c.width = bmp.width; c.height = bmp.height;
+  const g = c.getContext("2d");
+  g.drawImage(bmp, 0, 0);
+  const im = g.getImageData(0, 0, c.width, c.height), d = im.data, hist = new Uint32Array(256);
+  for (let i = 0; i < d.length; i += 4) { const y = (d[i] * 299 + d[i + 1] * 587 + d[i + 2] * 114) / 1000 | 0; d[i] = y; hist[y]++; }
+  const n = d.length / 4; let lo = 0, hi = 255, acc = 0;
+  while (lo < 254 && (acc += hist[lo]) < n * 0.02) lo++;
+  acc = 0; while (hi > lo + 1 && (acc += hist[hi]) < n * 0.02) hi--;
+  const k = 255 / Math.max(1, hi - lo);
+  for (let i = 0; i < d.length; i += 4) { const v = Math.max(0, Math.min(255, (d[i] - lo) * k)); d[i] = d[i + 1] = d[i + 2] = v; }
+  g.putImageData(im, 0, 0);
+  return c;
+}
+
+// A word worth keeping: read confidently and shaped like a real word, number or amount.
+const NUMISH = /^[(]?\d+([.,/]\d+)?(g|kg|ml|l|x|tbsp|tsp|mins?|kcal)?[)]?[,.]?$/i;
+function goodWord(w) {
+  const t = (w.text || "").trim();
+  if (!t) return false;
+  if (NUMISH.test(t) || /^[½¼¾⅓⅔&-]$/.test(t)) return w.confidence >= 55;
+  if (w.confidence < 70) return false;
+  const letters = t.replace(/[^A-Za-z]/g, "");
+  if (letters.length < t.replace(/[.,:;!()'’-]/g, "").length) return false; // stray symbols mixed in
+  if (letters.length === 1) return /^[aAI]$/.test(letters);
+  return /[aeiouy]/i.test(letters) && !/[bcdfghjklmnpqrstvwxz]{4,}/i.test(letters);
+}
+
+// Turns pasted text (for example copied with Live Text) into the same shape readImages returns.
+export function textToPages(text) {
+  return [String(text || "").split(/\r?\n/).map((t) => t.replace(/\s+/g, " ").trim()).filter(Boolean).map((t, i) => ({ text: t, h: i === 0 ? 1 : 0, conf: 100 }))];
+}
+
 // Reads each image and returns its lines with their height on the page,
 // so the biggest text (usually the meal name) can be picked out.
 export async function readImages(images, onProgress) {
@@ -32,17 +69,22 @@ export async function readImages(images, onProgress) {
   const pages = [];
   for (let i = 0; i < images.length; i++) {
     if (onProgress) onProgress("reading photo " + (i + 1) + " of " + images.length, 0);
-    const { data } = await worker.recognize(images[i], {}, { text: true, blocks: true });
+    let img = images[i];
+    try { img = await prep(images[i]); } catch (e) { /* read the photo as it is */ }
+    const { data } = await worker.recognize(img, {}, { text: true, blocks: true });
     const lines = [];
     (data.blocks || []).forEach((b) =>
       (b.paragraphs || []).forEach((p) =>
         (p.lines || []).forEach((l) => {
-          const text = (l.text || "").replace(/\s+/g, " ").trim();
-          if (text) lines.push({ text, h: l.bbox ? l.bbox.y1 - l.bbox.y0 : 0, conf: l.confidence || 0 });
+          const ws = (l.words || []).filter(goodWord);
+          // keep the line only if most of it was read cleanly and it has at least one real word
+          if (!ws.length || ws.length < (l.words || []).length * 0.6) return;
+          if (!ws.some((w) => /[A-Za-z]{3}/.test(w.text))) return;
+          const text = ws.map((w) => w.text).join(" ").trim();
+          lines.push({ text, h: l.bbox ? l.bbox.y1 - l.bbox.y0 : 0, conf: l.confidence || 0 });
         })
       )
     );
-    if (!lines.length && data.text) data.text.split("\n").forEach((t) => { t = t.trim(); if (t) lines.push({ text: t, h: 0, conf: 50 }); });
     pages.push(lines);
   }
   progressCb = null;
@@ -52,7 +94,7 @@ export async function readImages(images, onProgress) {
 /* ---------- turning text into a meal ---------- */
 
 const FRACTIONS = { "½": 0.5, "¼": 0.25, "¾": 0.75, "⅓": 1 / 3, "⅔": 2 / 3 };
-const UNIT_RE = "(kg|g|grams?|gr|ml|millilitres?|l|litres?|tbsp|tablespoons?|tsp|teaspoons?|tins?|cans?|packs?|pack|cloves?|x|pcs?|pieces?|slices?|bags?|sachets?|pots?|cups?)";
+const UNIT_RE = "(kg|g|grams?|gr|ml|millilitres?|l|litres?|tbsp|tablespoons?|tsp|teaspoons?|tins?|cans?|cartons?|packs?|pack|cloves?|x|pcs?|pieces?|slices?|bags?|sachets?|pots?|cups?)";
 const QTY_RE = "(\\d+(?:[.,]\\d+)?(?:\\s*\\/\\s*\\d+)?|[½¼¾⅓⅔]|\\d+\\s*[½¼¾])";
 const LEAD = new RegExp("^[-•*·]?\\s*" + QTY_RE + "\\s*" + UNIT_RE + "?\\b\\.?\\s*(?:of\\s+)?(.+)$", "i");
 const TRAIL = new RegExp("^[-•*·]?\\s*(.+?)[\\s,(:]+" + QTY_RE + "\\s*" + UNIT_RE + "?\\)?$", "i");
@@ -82,7 +124,7 @@ function normUnit(u) {
   if (/^(ml|millil)/.test(u)) return "ml";
   if (/^(l|litre)/.test(u)) return "l";
   if (/^(tbsp|tables|tsp|teas|sachet|cup)/.test(u)) return "spoon";
-  if (/^(tin|can)/.test(u)) return "tin";
+  if (/^(tin|can|carton)/.test(u)) return "tin";
   if (/^clove/.test(u)) return "clove";
   if (/^slice/.test(u)) return "slice";
   if (/^bag/.test(u)) return "bag";
@@ -114,7 +156,9 @@ export function matchIngredient(text, ING, skip) {
 }
 
 function cleanName(s) {
-  return s.replace(/\(.*?\)/g, " ").replace(/[^A-Za-z&' -]+/g, " ").replace(/\s+/g, " ").trim().replace(/^(of|x)\s+/i, "");
+  return s.replace(/\(.*?\)/g, " ").replace(/[^A-Za-z&' -]+/g, " ")
+    .replace(/(^|\s)(g|kg|ml|l|x|tbsp|tsp|cartons?|tins?|cans?|sachets?|packs?|pots?|pcs?)(?=\s|$)/gi, " ")
+    .replace(/\s+/g, " ").trim().replace(/^(of)\s+/i, "");
 }
 
 function parseIngLine(line) {
@@ -168,6 +212,7 @@ export function parseRecipe(pages, ING) {
     const p = parseIngLine(line);
     const nameText = p ? p.name : ingStart >= 0 && /^[A-Za-z][A-Za-z ,'-]{2,40}$/.test(line) ? cleanName(line) : null;
     if (!nameText || words(nameText).length === 0 || SKIP_ING.test(nameText)) return;
+    if (p && p.q != null && (p.q <= 0 || p.q > 3000)) return; // misread number
     const k = matchIngredient(nameText, ING, seen);
     if (k) {
       seen.add(k);

@@ -3,7 +3,7 @@
 import { db, signOutUser } from "./firebase.js";
 import { doc, getDoc, setDoc, onSnapshot } from "firebase/firestore";
 import { aiEnabled, aiJson } from "./ai.js";
-import { readImages, parseRecipe } from "./ocr.js";
+import { readImages, parseRecipe, textToPages } from "./ocr.js";
 
 let started=false;
 export function startApp(user){
@@ -432,8 +432,8 @@ function addIdeas(){
 
 /* ---------- import a recipe from photos (card or screenshots) ---------- */
 let imgLimits={maxCount:6,mediaTypes:['image/jpeg']}, assetsApi=imageStore, scanCtrl=null, scanDraftPhoto=null, fromScan=false, scanMsg='';
-let scan={mode:'card',front:null,back:null,keep:null,shots:[]};
-const resetScan=()=>{scan={mode:scan.mode||'card',front:null,back:null,keep:null,shots:[]}};
+let scan={mode:'card',front:null,back:null,keep:null,shots:[],text:''};
+const resetScan=()=>{scan={mode:scan.mode||'card',front:null,back:null,keep:null,shots:[],text:''}};
 const maxShots=()=>Math.max(1,Math.min(6,imgLimits?imgLimits.maxCount:4));
 const mealImg=(m,cls)=>m.img?'<img class="'+cls+'" data-img="'+esc(m.img)+'" alt="">':'';
 function shrink(file,max,q){return new Promise((res,rej)=>{const url=URL.createObjectURL(file);const img=new Image();
@@ -446,8 +446,12 @@ function shotSlot(k,label,desc){
    '<span class="shotin">'+(has?'<img src="'+URL.createObjectURL(has)+'" alt="'+label+' of the card">':ICON.camera+'<b>'+label+'</b><small>'+desc+'</small>')+'</span></label>';
 }
 function scanHTML(){
-  const card=scan.mode==='card';let body;
-  if(card){
+  const card=scan.mode==='card',paste=scan.mode==='paste';let body;
+  if(paste){
+    body='<p class="hint">The most accurate free way. On an iPhone, open the card photo in Photos, press and hold on the writing, tap <b>Select All</b> then <b>Copy</b>, and paste it here. Do the front, then the back. On Android, use Google Lens <b>Copy text</b>.</p>'+
+     '<label class="field" for="pasteText">Recipe text<textarea id="pasteText" rows="9" placeholder="Paste the recipe here, with the meal name on the first line">'+esc(scan.text||'')+'</textarea></label>'+
+     '<label class="shot" for="shot-front" style="max-width:180px"><input type="file" accept="image/*" id="shot-front" data-shot="front" class="sr"><span class="shotin">'+(scan.front?'<img src="'+URL.createObjectURL(scan.front)+'" alt="Photo for the meal">':ICON.camera+'<b>Photo</b><small>Optional, kept with the meal</small>')+'</span></label>';
+  }else if(card){
     body='<p class="hint">Take or choose a photo of each side of the card.</p>'+
      '<div class="shots">'+shotSlot('front','Front','Photo and name side')+shotSlot('back','Back','Ingredients and method')+'</div>';
   }else{
@@ -459,13 +463,13 @@ function scanHTML(){
   }
   return head('Import a recipe')+
    (scanMsg?'<p class="note">'+esc(scanMsg)+'</p>':'')+
-   '<div class="seg2" role="group" aria-label="What are you importing"><button type="button" class="fbtn" data-action="scan-mode" data-m="card" aria-pressed="'+card+'">Recipe card</button><button type="button" class="fbtn" data-action="scan-mode" data-m="shots" aria-pressed="'+!card+'">Screenshots</button></div>'+
+   '<div class="seg2" role="group" aria-label="What are you importing"><button type="button" class="fbtn" data-action="scan-mode" data-m="card" aria-pressed="'+card+'">Recipe card</button><button type="button" class="fbtn" data-action="scan-mode" data-m="shots" aria-pressed="'+(scan.mode==='shots')+'">Screenshots</button><button type="button" class="fbtn" data-action="scan-mode" data-m="paste" aria-pressed="'+paste+'">Paste text</button></div>'+
    body+
-   '<p class="hint">'+(aiEnabled?'Claude reads it, converts it to four portions and everyday Aldi ingredients, and you check it before it\'s saved.':'Your phone reads the text for free and fills in the meal. You check the name, amounts and steps before it\'s saved. Clear, flat photos in good light work best.')+'</p>'+
+   (paste?'':'<p class="hint">'+(aiEnabled?'Claude reads it, converts it to four portions and everyday Aldi ingredients, and you check it before it\'s saved.':'Your phone reads the text for free and fills in the meal. You check the name, amounts and steps before it\'s saved. Clear, flat photos in good light work best. If it comes out jumbled, use <b>Paste text</b> instead.')+'</p>')+
    '<p class="status" id="scanStatus" aria-live="polite"></p>'+
    '<button type="button" class="btn btn-primary btn-block" id="scanGo" data-action="scan-go">Read the recipe</button>';
 }
-function refreshScan(){if(!$('sheet').hidden&&$('scanGo'))$('panel').innerHTML=scanHTML()}
+function refreshScan(){if($('pasteText'))scan.text=$('pasteText').value;if(!$('sheet').hidden&&$('scanGo'))$('panel').innerHTML=scanHTML()}
 function scanPrompt(kind,count){
   const intro=kind==='card'
     ?'The '+(count===2?'two images are photos of the front and back':'image is a photo')+' of a meal-kit recipe card (for example HelloFresh).'
@@ -483,18 +487,26 @@ function scanPrompt(kind,count){
 async function addShots(files){
   const st=$('scanStatus');const room=maxShots()-scan.shots.length;const list=[...files].filter(f=>f&&f.type&&f.type.startsWith('image/')).slice(0,Math.max(0,room));
   if(!list.length){if(st&&room<=0)st.textContent='That\'s the most screenshots for one recipe.';return}
-  try{for(const f of list)scan.shots.push(await shrink(f,2000,0.85));refreshScan();
+  try{for(const f of list)scan.shots.push(await shrink(f,aiEnabled?2000:2600,0.9));refreshScan();
     if(files.length>list.length&&$('scanStatus'))$('scanStatus').textContent='Only the first '+maxShots()+' screenshots were added.'}
   catch(e){refreshScan();if($('scanStatus'))$('scanStatus').textContent='Couldn\'t open one of those images. Try a PNG or JPEG.'}
 }
 async function onShot(input){
   const k=input.dataset.shot,files=input.files;if(!files||!files.length)return;
   if(k==='shots'){addShots(files);return}
-  try{scan[k]=await shrink(files[0],1600,0.85);if(k==='front')scan.keep=await shrink(files[0],900,0.8);refreshScan()}
+  try{scan[k]=await shrink(files[0],aiEnabled?1600:2600,0.9);if(k==='front')scan.keep=await shrink(files[0],900,0.8);refreshScan()}
   catch(e){if($('scanStatus'))$('scanStatus').textContent='Couldn\'t open that photo. Try taking it again.'}
 }
 async function runScan(){
   const st=$('scanStatus'),go=$('scanGo');let imgs,kind=scan.mode,keep=null;
+  if(kind==='paste'){
+    const t=($('pasteText')||{}).value||'';scan.text=t;
+    if(t.trim().length<10){st.textContent='Paste the recipe text first.';return}
+    const m=parseRecipe(textToPages(t),ING);
+    if(!m){st.textContent='Couldn\'t find a recipe in that text.';return}
+    scanDraftPhoto=scan.keep;fromScan=true;scanMsg='';resetScan();scan.mode='paste';
+    openSheet(formHTML(m));return;
+  }
   if(kind==='card'){
     if(!scan.back){st.textContent=scan.front?'Add the back of the card too, so Claude can read the ingredients.':'Add photos of the card first.';return}
     imgs=[scan.front,scan.back].filter(Boolean);keep=scan.keep;
@@ -626,7 +638,7 @@ document.addEventListener('click',e=>{
     try{navigator.clipboard.writeText(txt).then(()=>{fb.hidden=true;toast('Shopping list copied')},fallback)}catch(err){fallback()}}
   else if(a==='ideas'){openSheet(ideasHTML())}
   else if(a==='scan'){scanMsg='';resetScan();openSheet(scanHTML())}
-  else if(a==='scan-mode'){scan.mode=b.dataset.m;scanMsg='';refreshScan()}
+  else if(a==='scan-mode'){if($('pasteText'))scan.text=$('pasteText').value;scan.mode=b.dataset.m;scanMsg='';refreshScan()}
   else if(a==='shot-del'){scan.shots.splice(+b.dataset.j,1);refreshScan()}
   else if(a==='scan-go'){runScan()}
   else if(a==='idea-q'){$('ideaReq').value=b.dataset.q;runIdeas()}

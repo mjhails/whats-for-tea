@@ -195,7 +195,7 @@ label.switch:not(.setrow){display:flex;align-items:center;gap:10px;font-size:15p
 .shotin small{font-size:12.5px}
 .shotin img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .shot input:focus-visible + .shotin{outline:2px solid var(--accent);outline-offset:2px}
-.seg2{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.seg2{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
 .seg2 .fbtn{text-align:center}
 .shotgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
 .shotgrid .shotin{aspect-ratio:9/16;padding:6px}
