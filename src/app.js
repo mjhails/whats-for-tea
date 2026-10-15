@@ -3,6 +3,7 @@
 import { db, signOutUser } from "./firebase.js";
 import { doc, getDoc, setDoc, onSnapshot } from "firebase/firestore";
 import { aiEnabled, aiJson } from "./ai.js";
+import { readImages, parseRecipe } from "./ocr.js";
 
 let started=false;
 export function startApp(user){
@@ -430,7 +431,7 @@ function addIdeas(){
 }
 
 /* ---------- import a recipe from photos (card or screenshots) ---------- */
-let imgLimits=aiEnabled?{maxCount:6,mediaTypes:['image/jpeg']}:null, assetsApi=imageStore, scanCtrl=null, scanDraftPhoto=null, fromScan=false, scanMsg='';
+let imgLimits={maxCount:6,mediaTypes:['image/jpeg']}, assetsApi=imageStore, scanCtrl=null, scanDraftPhoto=null, fromScan=false, scanMsg='';
 let scan={mode:'card',front:null,back:null,keep:null,shots:[]};
 const resetScan=()=>{scan={mode:scan.mode||'card',front:null,back:null,keep:null,shots:[]}};
 const maxShots=()=>Math.max(1,Math.min(6,imgLimits?imgLimits.maxCount:4));
@@ -460,7 +461,7 @@ function scanHTML(){
    (scanMsg?'<p class="note">'+esc(scanMsg)+'</p>':'')+
    '<div class="seg2" role="group" aria-label="What are you importing"><button type="button" class="fbtn" data-action="scan-mode" data-m="card" aria-pressed="'+card+'">Recipe card</button><button type="button" class="fbtn" data-action="scan-mode" data-m="shots" aria-pressed="'+!card+'">Screenshots</button></div>'+
    body+
-   '<p class="hint">Claude reads it, converts it to four portions and everyday Aldi ingredients, and you check it before it\'s saved.</p>'+
+   '<p class="hint">'+(aiEnabled?'Claude reads it, converts it to four portions and everyday Aldi ingredients, and you check it before it\'s saved.':'Your phone reads the text for free and fills in the meal. You check the name, amounts and steps before it\'s saved. Clear, flat photos in good light work best.')+'</p>'+
    '<p class="status" id="scanStatus" aria-live="polite"></p>'+
    '<button type="button" class="btn btn-primary btn-block" id="scanGo" data-action="scan-go">Read the recipe</button>';
 }
@@ -501,7 +502,20 @@ async function runScan(){
     if(!scan.shots.length){st.textContent='Add at least one screenshot first.';return}
     imgs=scan.shots.slice();const kp=$('shotKeep');if(!kp||kp.checked){try{keep=await shrink(imgs[0],900,0.8)}catch(e){keep=null}}
   }
-  go.disabled=true;st.textContent='Reading the recipe. This can take up to a minute…';
+  go.disabled=true;
+  if(!aiEnabled){
+    st.textContent='Getting the reader ready. The first time takes a little longer…';
+    try{
+      const pages=await readImages(imgs,(what,p)=>{if(document.body.contains(st))st.textContent='Reading the text: '+what+(p>0&&p<1?' ('+Math.round(p*100)+'%)':'')+'…'});
+      const m=parseRecipe(pages,ING);
+      if(!m){st.textContent=kind==='card'?'Couldn\'t find any writing in those photos. Try again in better light, with the card flat and filling the frame.':'Couldn\'t find any writing in those screenshots.';return}
+      scanDraftPhoto=keep;fromScan=true;scanMsg='';resetScan();
+      openSheet(formHTML(m));
+    }catch(e){st.textContent='Couldn\'t start the reader. Check you\'re online and try again.'}
+    finally{if(go&&document.body.contains(go))go.disabled=false}
+    return;
+  }
+  st.textContent='Reading the recipe. This can take up to a minute…';
   if(scanCtrl)scanCtrl.abort();scanCtrl=new AbortController();
   try{
     const r=await sampleApi.json(scanPrompt(kind,imgs.length),{images:imgs,modelTier:'default',signal:scanCtrl.signal,cache:false});
@@ -535,7 +549,7 @@ function rowHTML(name,q,u,a){const r=rowSeq++;
 function formHTML(m){
   editingId=m&&m.id?m.id:null;if(!m||m.id){fromScan=false;scanDraftPhoto=null}const pend=(m&&m._newIng)||{};
   const rows=m?m.ing.filter(([k])=>ING[k]||pend[k]).map(([k,q])=>{const d=ING[k]||pend[k];return rowHTML(d.n,d.a==='cup'?'':q,d.a==='cup'?'cup':d.u,d.a)}).join(''):rowHTML()+rowHTML()+rowHTML();
-  return head(editingId?'Edit meal':fromScan?'Check the scanned meal':'Add your own meal')+(fromScan?'<p class="note">Claude read this from your card. Check the amounts and steps, then save.</p>'+(scanDraftPhoto?'<img src="'+URL.createObjectURL(scanDraftPhoto)+'" alt="Front of the card" style="width:100%;max-height:180px;object-fit:cover;border-radius:14px">':''):'')+
+  return head(editingId?'Edit meal':fromScan?'Check the scanned meal':'Add your own meal')+(fromScan?'<p class="note">'+(aiEnabled?'Claude read this from your card. Check the amounts and steps, then save.':'Your phone read this from the photos. Check the name, that the amounts are for 4 people, and the steps, then save. Pick ingredients from the list where you can, so they join up with your shopping list.')+'</p>'+(scanDraftPhoto?'<img src="'+URL.createObjectURL(scanDraftPhoto)+'" alt="Front of the card" style="width:100%;max-height:180px;object-fit:cover;border-radius:14px">':''):'')+
    '<label class="field" for="fName">Meal name<input type="text" id="fName" value="'+esc(m?m.name:'')+'" placeholder="e.g. Nan\'s corned beef pie"></label>'+
    '<div class="grid3"><label class="field" for="fKcal">kcal per adult<input type="number" id="fKcal" min="100" max="1200" value="'+(m?m.kcal:'')+'" placeholder="450"></label>'+
    '<label class="field" for="fMins">Minutes<input type="number" id="fMins" min="5" max="300" value="'+(m?m.mins:'')+'" placeholder="30"></label>'+
