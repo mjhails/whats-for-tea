@@ -125,7 +125,7 @@ const ICON={
 };
 
 /* ---------- state ---------- */
-function defaultWeek(){return{servings:4,simple:true,excluded:[],days:DOW.map(()=>({id:null,locked:false,skip:false})),ticks:[],have:[]}}
+function defaultWeek(){return{servings:4,simple:true,excluded:[],days:DOW.map(()=>({id:null,locked:false,skip:false})),ticks:[],have:[],noP:[]}}
 const ui={tab:'week',filter:'all',q:'',hist:{}};
 let state=defaultWeek(), lib={meals:[],ing:{}};
 let ING={}, MEALS=[], byId={};
@@ -138,6 +138,7 @@ function sanitizeWeek(s){
   if(Number.isFinite(+s.servings))w.servings=Math.min(8,Math.max(1,+s.servings));
   if(typeof s.simple==='boolean')w.simple=s.simple;
   if(Array.isArray(s.excluded))w.excluded=s.excluded.filter(x=>typeof x==='string');
+  if(Array.isArray(s.noP))w.noP=s.noP.filter(x=>PROTEINS.includes(x));
   if(Array.isArray(s.ticks))w.ticks=s.ticks.filter(x=>typeof x==='string');
   if(Array.isArray(s.have))w.have=s.have.filter(x=>typeof x==='string');
   if(Array.isArray(s.days)&&s.days.length===7)w.days=s.days.map(d=>({id:d&&typeof d.id==='string'?d.id:null,locked:!!(d&&d.locked),skip:!!(d&&d.skip)}));
@@ -159,7 +160,7 @@ rebuild();
 
 /* ---------- sync (your Claude account when available, this browser otherwise) ---------- */
 let remote=null, weekTimer=null, libTimer=null, weekDirty=false, libDirty=false;
-function weekData(){return{servings:state.servings,simple:state.simple,excluded:state.excluded,days:state.days,ticks:state.ticks,have:state.have}}
+function weekData(){return{servings:state.servings,simple:state.simple,excluded:state.excluded,days:state.days,ticks:state.ticks,have:state.have,noP:state.noP}}
 function persistWeek(){
   try{localStorage.setItem(KEY,JSON.stringify(weekData()))}catch(e){}
   if(!remote)return;weekDirty=true;clearTimeout(weekTimer);
@@ -215,7 +216,9 @@ const fmtDate=d=>d.toLocaleDateString('en-GB',{day:'numeric',month:'short'});
 
 /* ---------- planning ---------- */
 const freshKeys=m=>m.ing.map(x=>x[0]).filter(k=>ING[k]&&ING[k].a!=='cup');
-const pool=()=>MEALS.filter(m=>!state.excluded.includes(m.id)&&(!state.simple||m.simple));
+const meatOn=m=>!state.noP.includes(m.p);
+const pool=()=>MEALS.filter(m=>!state.excluded.includes(m.id)&&meatOn(m)&&(!state.simple||m.simple));
+const PLABEL={chicken:'Chicken',turkey:'Turkey',beef:'Beef',pork:'Pork & ham',fish:'Fish',egg:'Eggs',veg:'Veggie'};
 function srcBefore(i,src){for(let j=i-1;j>=0;j--){const d=state.days[j];if(!d.skip&&d.id===src)return j}return -1}
 function pickFor(i,avoidList){
   const avoid=new Set(avoidList||[]);const days=state.days;
@@ -315,10 +318,13 @@ function renderShop(){
 function renderMeals(){
   document.querySelectorAll('#filters .fbtn').forEach(b=>b.setAttribute('aria-pressed',b.dataset.f===ui.filter));
   const q=ui.q.trim().toLowerCase();
-  const list=MEALS.filter(m=>ui.filter==='all'||(ui.filter==='simple'?m.simple:ui.filter==='different'?!m.simple:m.custom))
+  $('meatFilters').innerHTML=PROTEINS.map(p=>{const on=!state.noP.includes(p);
+    return '<button type="button" class="mchip'+(on?' '+pcls({p}):'')+'" data-action="meat" data-p="'+p+'" aria-pressed="'+on+'">'+(PICON[p]||'')+PLABEL[p]+'</button>'}).join('');
+  const list=MEALS.filter(meatOn).filter(m=>ui.filter==='all'||(ui.filter==='simple'?m.simple:ui.filter==='different'?!m.simple:m.custom))
     .filter(m=>!q||m.name.toLowerCase().includes(q)||m.ing.some(([k])=>ING[k]&&ING[k].n.toLowerCase().includes(q)));
-  const inRot=MEALS.filter(m=>!state.excluded.includes(m.id)).length;
-  $('libStats').textContent=inRot+' of '+MEALS.length+' meals in rotation. Switch off any your family won\'t eat.';
+  const inRot=MEALS.filter(m=>meatOn(m)&&!state.excluded.includes(m.id)).length;
+  const offN=state.noP.length?MEALS.filter(m=>!meatOn(m)).length:0;
+  $('libStats').textContent=inRot+' of '+MEALS.length+' meals in rotation. Switch off any your family won\'t eat.'+(offN?' '+offN+' hidden by the meat buttons above.':'');
   $('lib').innerHTML=list.length?list.map(m=>{const on=!state.excluded.includes(m.id);
     return '<li class="lrow'+(on?'':' out')+'"><button type="button" class="meal" data-action="librecipe" data-id="'+esc(m.id)+'"><span class="licon '+pcls(m)+'">'+picon(m)+mealImg(m,'limg')+'</span><span class="mname">'+esc(m.name)+'</span><span class="meta">'+m.kcal+' kcal · '+m.mins+' min'+(m.uses?' · leftovers':'')+(m.custom?' · yours':'')+'</span></button>'+
       '<label class="switch"><input type="checkbox" id="rot-'+esc(m.id)+'" data-rot="'+esc(m.id)+'"'+(on?' checked':'')+'><span class="track"></span><span class="sr">Include '+esc(m.name)+' in plans</span></label></li>'}).join('')
@@ -348,7 +354,7 @@ function recipeHTML(m,dayIdx){
    '<div><h4>Method</h4><ol class="steps">'+m.steps.map(s=>'<li>'+esc(s)+'</li>').join('')+'</ol></div>'+actions;
 }
 function chooseHTML(i){
-  const d=state.days[i];const avail=MEALS.filter(m=>!state.excluded.includes(m.id)).sort((a,b)=>a.name.localeCompare(b.name));
+  const d=state.days[i];const avail=MEALS.filter(m=>!state.excluded.includes(m.id)&&meatOn(m)).sort((a,b)=>a.name.localeCompare(b.name));
   const grp=(t,arr)=>arr.length?'<div><h4>'+t+'</h4><div class="pick">'+arr.map(m=>'<button type="button" data-action="set" data-i="'+i+'" data-id="'+esc(m.id)+'"><span>'+esc(m.name)+'</span><span class="meta">'+m.kcal+' kcal</span></button>').join('')+'</div></div>':'';
   return head('Choose '+DAYNAME[i]+'\'s tea')+
    (d.skip?'':'<div class="pick"><button type="button" data-action="skip" data-i="'+i+'" data-close="1"><span>Night off</span><span class="meta">Leftovers or a takeaway</span></button></div>')+
@@ -631,6 +637,11 @@ document.addEventListener('click',e=>{
   else if(a==='close'){closeSheet()}
   else if(a==='filter'){ui.filter=b.dataset.f;render()}
   else if(a==='untick'){state.ticks=[];update()}
+  else if(a==='meat'){const p=b.dataset.p;const off=state.noP.includes(p);
+    if(!off&&state.noP.length>=PROTEINS.length-1){toast('Keep at least one type on');return}
+    state.noP=off?state.noP.filter(x=>x!==p):state.noP.concat(p);
+    let n=0;if(!off)state.days.forEach((d,j)=>{if(!d.skip&&!d.locked&&d.id&&byId[d.id]&&byId[d.id].p===p){d.id=pickFor(j,[d.id]);n++}});
+    validate();update();toast(PLABEL[p]+(off?' meals are back on':' meals turned off'+(n?', '+n+(n>1?' days':' day')+' re-planned':'')))}
   else if(a==='have'){e.preventDefault();const k=b.dataset.k;if(!state.have.includes(k))state.have=state.have.concat(k);state.ticks=state.ticks.filter(x=>x!==k);update();toast(ING[k].n+' taken off the list')}
   else if(a==='unhave'){const k=b.dataset.k;state.have=state.have.filter(x=>x!==k);update();toast(ING[k].n+' is back on the list')}
   else if(a==='copy'){const txt=listText();const fb=$('copyFallback');
