@@ -42,6 +42,8 @@ const BASE_ING={
   orzo:{n:'Orzo',a:'tins',u:'g',carb:1}, cola:{n:'Diet cola',a:'tins',u:'tin'}, tortillaChips:{n:'Tortilla chips',a:'tins',u:'g'},
   lime:{n:'Limes',a:'veg',u:'x'}, apples:{n:'Apples',a:'veg',u:'x'}, cider:{n:'Cider',a:'tins',u:'ml'},
   cajun:{n:'Cajun seasoning',a:'cup'}, periPeri:{n:'Peri-peri seasoning',a:'cup'}, garamMasala:{n:'Garam masala',a:'cup'},
+  gherkins:{n:'Gherkins',a:'tins',u:'x'}, subRolls:{n:'Sub rolls',a:'bread',u:'x',carb:1}, pepperoni:{n:'Pepperoni',a:'fridge',u:'g'},
+  lightMayo:{n:'Light mayonnaise',a:'cup'}, honey:{n:'Honey',a:'cup'},
   oil:{n:'Spray oil',a:'cup'}, ketchup:{n:'Ketchup',a:'cup'}, vinegar:{n:'Vinegar',a:'cup'}, cornflour:{n:'Cornflour',a:'cup'}, mustard:{n:'Mustard',a:'cup'}
 };
 const AISLES=[['meat','Meat'],['fridge','Fridge'],['veg','Fruit & veg'],['frozen','Freezer'],['tins','Tins, pasta & rice'],['bread','Bread']];
@@ -170,11 +172,20 @@ const BUILTIN=[
  {id:'pon_spicyrice',name:'Peri-peri chicken and spicy rice',kcal:500,mins:35,simple:1,p:'chicken',ing:[['chickenThigh',600],['rice',280],['peppers',2],['onion',1],['frozenPeas',150],['tomatoes',1],['periPeri'],['stock']],steps:['Rub the chicken with peri-peri seasoning and bake at 200°C for 30 minutes.','Soften the onion and peppers, stir in the rice, a spoon of peri-peri, the tomatoes and 550 ml of stock.','Cover and simmer for 18 minutes, adding the peas at the end. Serve with the chicken.'],note:'Inspired by a popular Pinch of Nom recipe. This is our own everyday version.',pon:1},
  {id:'pon_balti',name:'Chicken balti',kcal:400,mins:30,simple:1,p:'chicken',ing:[['chickenBreast',500],['onion',2],['peppers',2],['garlic',3],['tomatoes',1],['rice',300],['curry'],['garamMasala']],steps:['Fry the onions, peppers and garlic until soft, then add the chicken and spices.','Add the tomatoes and a splash of water and simmer for 20 minutes.','Serve with rice.'],note:'Inspired by a popular Pinch of Nom recipe. This is our own everyday version.',pon:1},
  {id:'pon_mincedumplings',name:'Mince and dumplings',kcal:400,mins:60,simple:1,p:'beef',ing:[['beefMince',500],['onion',1],['carrots',2],['frozenPeas',150],['flour',120],['suet',40],['gravy'],['stock']],steps:['Brown the mince with the onion and diced carrots, add 600 ml of stock and gravy granules and simmer for 20 minutes.','Mix the flour and suet with a pinch of salt and enough cold water to make a soft dough. Roll into 8 small dumplings.','Stir the peas into the mince, sit the dumplings on top, cover and cook for 20 minutes until fluffy.'],note:'Inspired by a popular Pinch of Nom recipe. This is our own everyday version.',pon:1},
+ {id:'smashtacos',name:'Smash burger tacos',kcal:550,mins:20,simple:1,p:'beef',ing:[['beefMince',500],['wraps',8],['cheese',80],['onion',1],['salad',1],['gherkins',1],['lightMayo'],['ketchup'],['mustard']],steps:['Cut each wrap into 2 small rounds with a saucer, or use small wraps. Press a thin layer of mince onto one side of each and season.','Cook mince-side down in a hot dry pan for 3 minutes until crisp, flip, add a little cheese and cook for 1 to 2 minutes more.','Top with shredded lettuce, finely chopped onion and gherkins, and a burger sauce of light mayo, ketchup and mustard. Fold like tacos.']},
+ {id:'crunchwrap',name:'Beef crunchwrap',kcal:550,mins:25,simple:1,p:'beef',ing:[['beefMince',400],['wraps',8],['tortillaChips',60],['cheese',80],['tomatoes',1],['salad',1],['greekYog',80],['chilli'],['cumin']],steps:['Brown the mince with the chilli and cumin, add half the tomatoes and simmer until thick.','Spoon mince into the middle of 4 wraps, then add a handful of tortilla chips, cheese, lettuce and a spoon of yoghurt. Cover with a smaller piece of wrap and fold the edges in to make a parcel.','Toast seam-side down in a dry pan for 2 to 3 minutes each side until golden.']},
+ {id:'doner',name:'Homemade doner kebab',kcal:500,mins:45,simple:1,p:'beef',ing:[['beefMince',500],['flatbreads',4],['salad',1],['onion',1],['greekYog',150],['garlic',3],['cumin'],['paprika'],['chilli'],['herbs']],steps:['Mix the mince with the spices, herbs and 2 crushed garlic cloves until smooth and pasty. Press into a loaf tin.','Bake at 180°C for 35 minutes, drain, rest for 5 minutes and slice very thinly. Crisp the slices in a hot pan if you like.','Serve in warm flatbreads with salad, sliced onion and a garlic yoghurt sauce.']},
+ {id:'cheesesteak',name:'Philly cheesesteak subs',kcal:550,mins:20,simple:1,p:'beef',ing:[['beefStrips',400],['subRolls',4],['peppers',2],['onion',2],['mushrooms',150],['cheese',80],['salad',1]],steps:['Fry the sliced onions, peppers and mushrooms until soft and sweet.','Add the beef strips to a very hot pan and cook for 2 to 3 minutes, then mix with the veg.','Pile into the rolls, top with cheese and grill until melted. Serve with salad.']},
+ {id:'cheeseburgerpasta',name:'One-pot cheeseburger pasta',kcal:600,mins:25,simple:1,p:'beef',ing:[['beefMince',500],['pasta',300],['tomatoes',1],['onion',1],['cheese',80],['gherkins',1],['mustard'],['ketchup'],['stock']],steps:['Brown the mince with the onion in a large pan.','Add the pasta, tomatoes, a squeeze of ketchup and mustard and 600 ml of stock. Simmer for 12 to 15 minutes, stirring, until the pasta is cooked.','Stir in most of the cheese, top with the rest and chopped gherkins.']},
+ {id:'pizzapasta',name:'Pepperoni pizza pasta bake',kcal:600,mins:30,simple:1,p:'pork',ing:[['pasta',320],['pepperoni',60],['tomatoes',2],['peppers',1],['onion',1],['cheese',100],['herbs'],['salad',1]],steps:['Cook the pasta.','Soften the onion and pepper, add the tomatoes and herbs and simmer for 5 minutes.','Mix with the pasta, top with cheese and pepperoni and bake at 200°C for 15 minutes. Serve with salad.']},
+ {id:'loadedfries',name:'Loaded chilli cheese fries',kcal:600,mins:40,simple:1,p:'beef',ing:[['potatoes',1000],['beefMince',400],['kidneyBeans',1],['tomatoes',1],['onion',1],['cheese',80],['greekYog',100],['chilli'],['cumin'],['oil']],steps:['Cut the potatoes into fries, spray with oil and bake at 220°C (or air fry) for 30 to 35 minutes.','Brown the mince with the onion and spices, add the beans and tomatoes and simmer for 15 minutes.','Pile the chilli onto the fries, top with cheese and grill for 2 minutes. Add a spoon of yoghurt.']},
+ {id:'hothoney',name:'Hot honey chicken with wedges',kcal:550,mins:40,simple:1,p:'chicken',ing:[['chickenThigh',600],['potatoes',800],['salad',1],['honey'],['chilli'],['paprika'],['garlic',2],['oil']],steps:['Cut the potatoes into wedges, spray with oil and paprika and bake at 220°C for 35 minutes.','Bake the chicken thighs alongside for 30 minutes.','Warm 3 tbsp honey with a pinch of chilli and the crushed garlic, brush over the chicken and bake for 5 minutes more until sticky. Serve with salad.']},
+ {id:'fajitapasta',name:'Chicken fajita pasta',kcal:550,mins:25,simple:1,p:'chicken',ing:[['chickenBreast',400],['pasta',320],['peppers',2],['onion',1],['tomatoes',1],['softCheese',100],['cheese',40],['paprika'],['cumin'],['chilli']],steps:['Cook the pasta.','Fry the sliced chicken, peppers and onion with the spices until cooked.','Add the tomatoes and simmer for 5 minutes, stir in the soft cheese, toss with the pasta and top with a little cheese.']},
 ];
 
 // Meals that are cheap to make: mince, sausages, beans, eggs, lentils, thighs, tins and so on.
-const BUDGET=new Set(['bolognese','lentilbol','sausagemash','toad','sausagecass','jacketbeans','jackettuna','burgers','cottagepie','hotpot','cornedbeef','hiddenveg','maccheese','tunabake','traybake','meatballs','chilli','chillijackets','wrappizza','friedrice','omelette','beansegg','fishfingers','fishcakes','leeksoup','tomsoup','peaham','chickennoodlesoup','curry','shakshuka','dhal','spanishrice','burritos','veggiechilli','spanishomelette','bolbake','sausagepasta','hampasta','eggnoodles','minestrone','sweetpotcurry','roastdinner','bbqchicken','baconpasta','sausagetray','bubble','tunapastasalad','couscous','leekbake','lentilshepherd','sausagemeatballs','beefpastabake','carbonara','thaipork','specialrice','chowmein','chilliconcarne','lasagne','kievs','enchiladas','gammonegg','risotto','chinesecurry','jambalaya','beefmeatballs','pon_colachicken','pon_campfire','pon_dirtyrice','pon_bolpie','pon_spicyrice','pon_mincedumplings']);
-const isBudget=m=>m.custom?!!m.b:BUDGET.has(m.id);
+const BUDGET=new Set(['bolognese','lentilbol','sausagemash','toad','sausagecass','jacketbeans','jackettuna','burgers','cottagepie','hotpot','cornedbeef','hiddenveg','maccheese','tunabake','traybake','meatballs','chilli','chillijackets','wrappizza','friedrice','omelette','beansegg','fishfingers','fishcakes','leeksoup','tomsoup','peaham','chickennoodlesoup','curry','shakshuka','dhal','spanishrice','burritos','veggiechilli','spanishomelette','bolbake','sausagepasta','hampasta','eggnoodles','minestrone','sweetpotcurry','roastdinner','bbqchicken','baconpasta','sausagetray','bubble','tunapastasalad','couscous','leekbake','lentilshepherd','sausagemeatballs','beefpastabake','carbonara','thaipork','specialrice','chowmein','chilliconcarne','lasagne','kievs','enchiladas','gammonegg','risotto','chinesecurry','jambalaya','beefmeatballs','pon_colachicken','pon_campfire','pon_dirtyrice','pon_bolpie','pon_spicyrice','pon_mincedumplings','smashtacos','crunchwrap','doner','cheeseburgerpasta','pizzapasta','loadedfries','fajitapasta']);
+const isBudget=m=>m.custom||m.edited?!!m.b:BUDGET.has(m.id);
 const isLow=m=>m.kcal<=500;
 
 const DOW=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
@@ -200,7 +211,7 @@ const ICON={
 /* ---------- state ---------- */
 function defaultWeek(){return{servings:4,simple:true,excluded:[],days:DOW.map(()=>({id:null,locked:false,skip:false})),ticks:[],have:[],favs:[],favDays:[],favAlt:{days:[],on:null},want:{low:false,budget:false,fav:false}}}
 const ui={tab:'week',filter:'all',meat:null,q:'',hist:{},favDays:null,favAlt:null,altHere:true};
-let state=defaultWeek(), lib={meals:[],ing:{}};
+let state=defaultWeek(), lib={meals:[],ing:{},over:{}};
 let ING={}, MEALS=[], byId={};
 let fresh=true;
 try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&Array.isArray(s.days)&&s.days.length===7){state=sanitizeWeek(s);fresh=false}}catch(e){}
@@ -220,15 +231,24 @@ function sanitizeWeek(s){
   if(Array.isArray(s.days)&&s.days.length===7)w.days=s.days.map(d=>({id:d&&typeof d.id==='string'?d.id:null,locked:!!(d&&d.locked),skip:!!(d&&d.skip)}));
   return w;
 }
+const BUILTIN_IDS=new Set(BUILTIN.map(m=>m.id));
+function cleanMeal(m){
+  if(!(m&&typeof m.id==='string'&&typeof m.name==='string'&&Array.isArray(m.ing)&&Array.isArray(m.steps)))return null;
+  return{id:m.id,name:m.name,kcal:+m.kcal||400,mins:+m.mins||30,simple:m.simple?1:0,p:PROTEINS.includes(m.p)?m.p:'veg',ing:m.ing.map(x=>Array.isArray(x)?x:(x&&typeof x.k==='string'?(x.q!=null?[x.k,x.q]:[x.k]):null)).filter(x=>Array.isArray(x)&&typeof x[0]==='string').map(x=>x.length>1?[x[0],+x[1]||0]:[x[0]]),steps:m.steps.map(String).slice(0,10),img:typeof m.img==='string'&&/^[A-Za-z0-9_-]{8,64}$/.test(m.img)?m.img:undefined,b:m.b?1:0};
+}
 function sanitizeLib(l){
-  const out={meals:[],ing:{}};
+  // meals: your own; over: your edited copies of built-in meals, by id
+  const out={meals:[],ing:{},over:{}};
+  if(l&&l.over&&typeof l.over==='object')Object.keys(l.over).forEach(id=>{const m=cleanMeal(l.over[id]);if(m&&BUILTIN_IDS.has(id)&&m.id===id)out.over[id]=m});
   if(l&&l.ing&&typeof l.ing==='object')Object.keys(l.ing).forEach(k=>{const v=l.ing[k];if(v&&typeof v.n==='string'&&AISLE_KEYS.includes(v.a))out.ing[k]={n:v.n,a:v.a,u:v.u||undefined}});
-  if(l&&Array.isArray(l.meals))l.meals.forEach(m=>{if(m&&typeof m.id==='string'&&typeof m.name==='string'&&Array.isArray(m.ing)&&Array.isArray(m.steps))out.meals.push({id:m.id,name:m.name,kcal:+m.kcal||400,mins:+m.mins||30,simple:m.simple?1:0,p:PROTEINS.includes(m.p)?m.p:'veg',ing:m.ing.map(x=>Array.isArray(x)?x:(x&&typeof x.k==='string'?(x.q!=null?[x.k,x.q]:[x.k]):null)).filter(x=>Array.isArray(x)&&typeof x[0]==='string').map(x=>x.length>1?[x[0],+x[1]||0]:[x[0]]),steps:m.steps.map(String).slice(0,10),img:typeof m.img==='string'&&/^[A-Za-z0-9_-]{8,64}$/.test(m.img)?m.img:undefined,b:m.b?1:0,custom:1})});
+  if(l&&Array.isArray(l.meals))l.meals.forEach(m=>{const c=cleanMeal(m);if(c)out.meals.push(Object.assign(c,{custom:1}))});
   return out;
 }
 function rebuild(){
   ING=Object.assign({},BASE_ING,lib.ing);
-  MEALS=BUILTIN.concat(lib.meals.map(m=>Object.assign({},m,{custom:1,ing:m.ing.filter(x=>ING[x[0]])})));
+  const keep=m=>m.ing.filter(x=>ING[x[0]]);
+  MEALS=BUILTIN.map(m=>{const o=lib.over[m.id];return o?Object.assign({},m,o,{id:m.id,img:undefined,edited:1,ing:keep(o)}):m})
+    .concat(lib.meals.map(m=>Object.assign({},m,{custom:1,ing:keep(m)})));
   byId={};MEALS.forEach(m=>byId[m.id]=m);
   state.days.forEach(d=>{if(d.id&&!byId[d.id])d.id=null});
 }
@@ -255,7 +275,11 @@ function syncFail(e){
   toast(e&&e.code==='permission-denied'?'Saving is blocked by the Firebase rules':'Couldn\'t save. Check your connection.');try{renderMeals()}catch(x){}
 }
 // Firestore can't store arrays inside arrays, so ingredients are saved as {k,q} objects.
-function libForStore(){return{meals:lib.meals.map(m=>Object.assign({},m,{custom:undefined,_newIng:undefined,ing:m.ing.map(x=>x.length>1?{k:x[0],q:+x[1]||0}:{k:x[0]})})),ing:lib.ing}}
+function libForStore(){
+  const store=m=>Object.assign({},m,{custom:undefined,edited:undefined,_newIng:undefined,ing:m.ing.map(x=>x.length>1?{k:x[0],q:+x[1]||0}:{k:x[0]})});
+  const over={};Object.keys(lib.over).forEach(id=>over[id]=store(lib.over[id]));
+  return{meals:lib.meals.map(store),ing:lib.ing,over};
+}
 async function connect(){
   const refs={week:doc(db,'tea','week'),lib:doc(db,'tea','library')};
   try{
@@ -441,7 +465,9 @@ function recipeHTML(m,dayIdx){
       '<button type="button" class="sbtn" data-action="lock" data-i="'+dayIdx+'" data-close="1" aria-pressed="'+!!d.locked+'">'+(d.locked?ICON.lock:ICON.unlock)+(d.locked?'Locked':'Lock')+'</button>'+
       '<button type="button" class="sbtn" data-action="skip" data-i="'+dayIdx+'" data-close="1">'+ICON.moon+'Night off</button></div>'}
   else actions='<div class="prow"><select id="putDay" aria-label="Day">'+DAYNAME.map((n,i)=>'<option value="'+i+'">'+n+'</option>').join('')+'</select><button type="button" class="btn btn-primary" data-action="put" data-id="'+esc(m.id)+'">Put it on this day</button></div>';
-  if(m.custom)actions+='<div class="prow"><button type="button" class="btn" data-action="edit" data-id="'+esc(m.id)+'">Edit meal</button><button type="button" class="btn btn-danger" id="delBtn" data-action="delete" data-id="'+esc(m.id)+'">Delete meal</button></div>';
+  actions+='<div class="prow"><button type="button" class="btn" data-action="edit" data-id="'+esc(m.id)+'">Edit meal</button>'+
+    (m.custom?'<button type="button" class="btn btn-danger" id="delBtn" data-action="delete" data-id="'+esc(m.id)+'">Delete meal</button>':
+     m.edited?'<button type="button" class="btn" data-action="reset" data-id="'+esc(m.id)+'" data-i="'+(dayIdx!=null?dayIdx:'')+'">Reset to original</button>':'')+'</div>';
   return '<div class="sband '+pcls(m)+(m.img?' has-img':'')+'">'+picon(m)+mealImg(m,'sbimg')+'</div>'+head(esc(m.name))+'<p class="meta" style="margin:-10px 0 0">'+(dayIdx!=null?DAYNAME[dayIdx]+' · ':'')+m.kcal+' kcal · '+m.mins+' min · serves '+state.servings+(isBudget(m)?' · budget friendly':'')+'</p>'+
    '<button type="button" class="favline" data-action="fav" data-sheet="1" data-id="'+esc(m.id)+'" data-i="'+(dayIdx!=null?dayIdx:'')+'" aria-pressed="'+isFav(m)+'">'+ICON.heart+(isFav(m)?'Family favourite':'Mark as a family favourite')+'</button>'+top+
    (m.note?'<p class="note">'+esc(m.note)+'</p>':'')+
@@ -698,7 +724,7 @@ function rowHTML(name,q,u,a){const r=rowSeq++;
 function formHTML(m){
   editingId=m&&m.id?m.id:null;if(!m||m.id){fromScan=false;scanDraftPhoto=null}const pend=(m&&m._newIng)||{};
   const rows=m?m.ing.filter(([k])=>ING[k]||pend[k]).map(([k,q])=>{const d=ING[k]||pend[k];return rowHTML(d.n,d.a==='cup'?'':q,d.a==='cup'?'cup':d.u,d.a)}).join(''):rowHTML()+rowHTML()+rowHTML();
-  return head(editingId?'Edit meal':fromScan?'Check the scanned meal':'Add your own meal')+(fromScan?'<p class="note">'+(aiEnabled?'Claude read this from your card. Check the amounts and steps, then save.':'Your phone read this from the photos. Check the name, that the amounts are for 4 people, and the steps, then save. Pick ingredients from the list where you can, so they join up with your shopping list.')+'</p>'+(scanDraftPhoto?'<img src="'+URL.createObjectURL(scanDraftPhoto)+'" alt="Front of the card" style="width:100%;max-height:180px;object-fit:cover;border-radius:14px">':''):'')+
+  return head(editingId?'Edit meal':fromScan?'Check the scanned meal':'Add your own meal')+(editingId&&BUILTIN_IDS.has(editingId)?'<p class="hint">Your changes are saved for everyone in the family. You can reset this meal to the original from its recipe.</p>':'')+(fromScan?'<p class="note">'+(aiEnabled?'Claude read this from your card. Check the amounts and steps, then save.':'Your phone read this from the photos. Check the name, that the amounts are for 4 people, and the steps, then save. Pick ingredients from the list where you can, so they join up with your shopping list.')+'</p>'+(scanDraftPhoto?'<img src="'+URL.createObjectURL(scanDraftPhoto)+'" alt="Front of the card" style="width:100%;max-height:180px;object-fit:cover;border-radius:14px">':''):'')+
    '<label class="field" for="fName">Meal name<input type="text" id="fName" value="'+esc(m?m.name:'')+'" placeholder="e.g. Nan\'s corned beef pie"></label>'+
    '<div class="grid3"><label class="field" for="fKcal">kcal per adult<input type="number" id="fKcal" min="100" max="1200" value="'+(m?m.kcal:'')+'" placeholder="450"></label>'+
    '<label class="field" for="fMins">Minutes<input type="number" id="fMins" min="5" max="300" value="'+(m?m.mins:'')+'" placeholder="30"></label>'+
@@ -733,7 +759,8 @@ async function saveForm(){
   const wasScan=fromScan;
   if(fromScan&&scanDraftPhoto&&assetsApi){err.textContent='Saving the photo…';try{const up=await assetsApi.upload(scanDraftPhoto);if(up&&up.id)meal.img=up.id}catch(e){}err.textContent=''}
   Object.assign(lib.ing,newIng);
-  const ix=lib.meals.findIndex(x=>x.id===meal.id);if(ix>=0)lib.meals[ix]=meal;else lib.meals.push(meal);
+  if(BUILTIN_IDS.has(meal.id))lib.over[meal.id]=meal;
+  else{const ix=lib.meals.findIndex(x=>x.id===meal.id);if(ix>=0)lib.meals[ix]=meal;else lib.meals.push(meal)}
   fromScan=false;scanDraftPhoto=null;
   persistLib();render();
   if(wasScan){scanMsg=meal.name+' is in your library. Ready for the next one.';openSheet(scanHTML())}else{closeSheet();toast(editingId?'Meal updated':meal.name+' added to your library')}
@@ -797,6 +824,8 @@ document.addEventListener('click',e=>{
   else if(a==='idea-add'){addIdeas()}
   else if(a==='addown'){openSheet(formHTML(null))}
   else if(a==='edit'){openSheet(formHTML(byId[b.dataset.id]))}
+  else if(a==='reset'){const id=b.dataset.id;delete lib.over[id];persistLib();rebuild();update();
+    openSheet(recipeHTML(byId[id],b.dataset.i!==''&&b.dataset.i!=null?+b.dataset.i:null));toast(byId[id].name+' is back to the original')}
   else if(a==='f-addrow'){$('fIngs').insertAdjacentHTML('beforeend',rowHTML());const rs=$('fIngs').querySelectorAll('.fi-n');rs[rs.length-1].focus()}
   else if(a==='f-delrow'){b.closest('.frow').remove()}
   else if(a==='f-save'){saveForm()}
